@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-navy: #113253;
+  --color-accent-teal: #489895;
+  --color-bg-light: #F1F5F9;
+}
+
+body {
+  background-color: var(--color-bg-light, #F1F5F9);
+  color: var(--color-primary-navy, #113253);
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

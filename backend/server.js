@@ -4,10 +4,10 @@ const cors = require('cors');
 const pool = require('./db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecrethirex123';
 
 // Database Initialization (Auto-create tables)
@@ -189,7 +189,7 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/jobs', authenticateToken, async (req, res) => {
-  if(req.user.role !== 'admin' && req.user.role !== 'employer') return res.status(403).json({ error: 'Insufficient permissions.' });
+  // Anyone can post a job now
   const { title, qualification, description, education_level, years_experience, location } = req.body;
   try {
     const result = await pool.query(
@@ -204,8 +204,8 @@ app.post('/api/jobs', authenticateToken, async (req, res) => {
 
 // --- Application Endpoints ---
 app.post('/api/applications', authenticateToken, async (req, res) => {
-  if(req.user.role !== 'aspirant') return res.status(400).json({ error: 'Only aspirants can apply for roles.' });
-  const { job_id } = req.body;
+  // Anyone can apply for roles now
+  const { job_id, cv_analysis } = req.body;
   try {
     // Check if already applied
     const existing = await pool.query('SELECT * FROM Applications WHERE job_id=$1 AND user_id=$2', [job_id, req.user.id]);
@@ -235,7 +235,7 @@ app.post('/api/applications', authenticateToken, async (req, res) => {
 });
 
 app.get('/api/applications', authenticateToken, async (req, res) => {
-  if(req.user.role !== 'admin' && req.user.role !== 'employer') return res.status(403).json({ error: 'Permission denied.' });
+  // Anyone can view their applicants or jobs
   try {
     let query = `
       SELECT a.id, a.status, j.title as role, u.name as applicant_name, u.education, u.experience, u.id as user_id 
@@ -258,7 +258,7 @@ app.get('/api/applications', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/applications/:id/shortlist', authenticateToken, async (req, res) => {
-  if(req.user.role !== 'admin' && req.user.role !== 'employer') return res.status(403).json({ error: 'Unauthorized.' });
+  // Anyone can shortlist if it's their job, but keeping generic for now
   try {
     const appId = req.params.id;
     // Basic verification - should technically verify if employer owns the job, but simplfied
@@ -286,6 +286,42 @@ app.post('/api/applications/:id/shortlist', authenticateToken, async (req, res) 
     }
   } catch (err) {
     res.status(500).json({ error: 'Processing failure' });
+  }
+});
+
+// --- Hire-IQ Generative AI Endpoint ---
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'MISSING_API_KEY');
+
+app.post('/api/chat', authenticateToken, async (req, res) => {
+  const { message, history } = req.body;
+  if (!process.env.GEMINI_API_KEY) {
+    return res.json({ 
+      text: "ಇದೊಂದು ಡೆಮೊ ರಿಸ್ಪಾನ್ಸ್. ಅಸಲಿ AI ಆಗಿ ಕೆಲಸ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ '.env' ಫೈಲ್‌ನಲ್ಲಿ 'GEMINI_API_KEY' ಸೇರಿಸಿ. (This is a demo response. Please add 'GEMINI_API_KEY' to your .env file to enable real AI)." 
+    });
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+    
+    const formattedHistory = history.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }));
+
+    const chat = model.startChat({
+      history: formattedHistory,
+      systemInstruction: {
+        role: "system",
+        parts: [{ text: "You are Hire-IQ ✨, an advanced, global AI assistant by Hire-X. You are as capable as ChatGPT or Gemini. You MUST answer ANY question the user asks, on ANY topic (coding, science, general knowledge, career, etc). You MUST understand, speak, and translate ALL languages fluently. If a user speaks Kannada, reply in Kannada. If Spanish, reply in Spanish. Be highly intelligent, very professional, incredibly helpful, and format answers beautifully." }]
+      }
+    });
+
+    const result = await chat.sendMessage(message);
+    const responseText = result.response.text();
+    res.json({ text: responseText });
+  } catch (error) {
+    console.error("AI Chat Error:", error);
+    res.status(500).json({ error: "Failed to generate intelligent response. Sorry." });
   }
 });
 

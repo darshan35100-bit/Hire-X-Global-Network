@@ -2,8 +2,10 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { token, login, user } = useContext(AuthContext);
   const { addNotification } = useContext(NotificationContext);
   const [profile, setProfile] = useState(null);
@@ -14,8 +16,12 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    if (!token) {
+      navigate('/login', { state: { isRegister: true } });
+      return;
+    }
     fetchProfile();
-  }, [token]);
+  }, [token, navigate]);
 
   const fetchProfile = async () => {
     try {

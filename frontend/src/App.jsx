@@ -9,6 +9,7 @@ import Articles from './components/Articles';
 import { AuthContext } from './context/AuthContext';
 import Profile from './components/Profile';
 import { NotificationContext } from './context/NotificationContext';
+import HireIQ from './components/HireIQ';
 
 function GlobalNotificationListener() {
   const { user } = useContext(AuthContext);
@@ -63,14 +64,11 @@ function App() {
               {/* Navigation Links on right */}
               <nav className="hidden lg:flex space-x-10 items-center">
                 <Link to="/" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Home</Link>
-                <Link to="/jobs" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Recent Jobs</Link>
-                
-                {user?.role === 'admin' || user?.role === 'employer' ? (
-                  <Link to="/admin" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Post a Job / Dashboard</Link>
-                ) : null}
+                <Link to="/jobs" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Explore Opportunities</Link>
+                <Link to="/post-job" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Post a Job</Link>
                 
                 <Link to="/articles" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Articles</Link>
-                
+                <HireIQ />
                 {user ? (
                   <div className="flex items-center space-x-6">
                     <Link to="/profile" className="flex items-center space-x-3 group">
@@ -111,7 +109,7 @@ function App() {
         <main className="flex-grow flex flex-col">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/admin" element={<AdminJobPosting />} />
+            <Route path="/post-job" element={<AdminJobPosting />} />
             <Route path="/login" element={<Login />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/articles" element={<Articles />} />

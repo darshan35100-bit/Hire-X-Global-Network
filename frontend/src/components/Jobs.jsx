@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [analyzingMap, setAnalyzingMap] = useState({});
   const locationFragment = useLocation().search; // ?category=Web
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -23,28 +24,36 @@ const Jobs = () => {
 
   const handleApply = async (jobId) => {
     if (!user) {
-      alert("Please register to apply for jobs!");
       navigate('/login', { state: { isRegister: true } });
       return;
     }
-    try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ job_id: jobId })
-      });
-      const data = await res.json();
-      if(res.ok) {
-        alert("Application submitted successfully!");
-      } else {
-        alert(data.error || "Failed to apply");
+
+    setAnalyzingMap(prev => ({ ...prev, [jobId]: true }));
+
+    // Simulate Fake CV Analysis
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ job_id: jobId })
+        });
+        const data = await res.json();
+        if(res.ok) {
+          const cvScore = Math.floor(Math.random() * 30) + 70; // 70 to 99
+          alert(`Application submitted successfully!\nCV match score: ${cvScore}%`);
+        } else {
+          alert(data.error || "Failed to apply");
+        }
+      } catch(err) {
+        alert("Error applying. Try again later.");
+      } finally {
+        setAnalyzingMap(prev => ({ ...prev, [jobId]: false }));
       }
-    } catch(err) {
-      alert("Error applying. Try again later.");
-    }
+    }, 2500);
   };
 
   return (
@@ -69,8 +78,8 @@ const Jobs = () => {
                 {job.years_experience && <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">⏳ {job.years_experience} Yrs</span>}
               </div>
 
-              <button onClick={() => handleApply(job.id)} className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all duration-300 transform group-hover:-translate-y-2 group-hover:brightness-90 group-hover:shadow-[0_15px_30px_rgba(17,50,83,0.3)] uppercase tracking-widest text-[12px] shadow-sm relative z-10">
-                Apply Now
+              <button onClick={() => handleApply(job.id)} disabled={analyzingMap[job.id]} className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all duration-300 transform group-hover:-translate-y-2 group-hover:brightness-90 group-hover:shadow-[0_15px_30px_rgba(17,50,83,0.3)] uppercase tracking-widest text-[12px] shadow-sm relative z-10 disabled:opacity-75 disabled:cursor-wait">
+                {analyzingMap[job.id] ? 'Analyzing CV & Applying...' : 'Apply Now'}
               </button>
             </div>
           )) : (

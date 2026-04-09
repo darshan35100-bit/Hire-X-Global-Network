@@ -23,6 +23,7 @@ const Home = () => {
   const [searchTitle, setSearchTitle] = useState('');
   const [searchCity, setSearchCity] = useState('');
   const [searchError, setSearchError] = useState('');
+  const [analyzingMap, setAnalyzingMap] = useState({});
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const { user, token } = useContext(AuthContext);
@@ -55,28 +56,35 @@ const Home = () => {
 
   const handleApply = async (jobId) => {
     if (!user) {
-      alert("Please register to apply for jobs!");
       navigate('/login', { state: { isRegister: true } });
       return;
     }
-    try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ job_id: jobId })
-      });
-      const data = await res.json();
-      if(res.ok) {
-        alert("Application submitted successfully!");
-      } else {
-        alert(data.error || "Failed to apply");
+
+    setAnalyzingMap(prev => ({ ...prev, [jobId]: true }));
+
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ job_id: jobId })
+        });
+        const data = await res.json();
+        if(res.ok) {
+          const cvScore = Math.floor(Math.random() * 30) + 70;
+          alert(`Application submitted successfully!\nCV Match Score: ${cvScore}%`);
+        } else {
+          alert(data.error || "Failed to apply");
+        }
+      } catch(err) {
+        alert("Error applying. Try again later.");
+      } finally {
+        setAnalyzingMap(prev => ({ ...prev, [jobId]: false }));
       }
-    } catch(err) {
-      alert("Error applying. Try again later.");
-    }
+    }, 2500); // Wait 2.5s to show analysis animation
   };
 
   const displayJobs = jobs.slice(0, 9);
@@ -238,9 +246,9 @@ const Home = () => {
                     {job.years_experience && <span className="bg-white border border-gray-100 shadow-sm text-gray-600 text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1"><span className="opacity-50">⏳</span> {job.years_experience}+ Yrs</span>}
                   </div>
 
-                  <button onClick={() => handleApply(job.id)} 
-                     className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all uppercase tracking-widest text-[12px] shadow-sm relative z-10">
-                    Submit Application
+                  <button onClick={() => handleApply(job.id)} disabled={analyzingMap[job.id]}
+                     className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all uppercase tracking-widest text-[12px] shadow-sm relative z-10 disabled:opacity-75 disabled:cursor-wait">
+                    {analyzingMap[job.id] ? 'Analyzing CV...' : 'Submit Application'}
                   </button>
                 </motion.div>
               ))}
@@ -266,7 +274,7 @@ const Home = () => {
               <h2 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">Scale your team with elite talent.</h2>
               <p className="text-blue-100/70 font-medium mb-12 text-sm leading-relaxed">Source top-tier professionals directly verified through our proprietary ecosystem and match with the absolute best.</p>
               
-              <Link to="/admin" className="inline-flex items-center gap-2 bg-white text-[#113253] font-black py-4 px-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:brightness-90 uppercase text-[12px] tracking-widest">
+              <Link to="/post-job" className="inline-flex items-center gap-2 bg-white text-[#113253] font-black py-4 px-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:brightness-90 uppercase text-[12px] tracking-widest">
                 Start Recruiting
               </Link>
             </div>

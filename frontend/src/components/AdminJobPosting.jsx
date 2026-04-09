@@ -22,9 +22,8 @@ const AdminJobPosting = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    if(!user || user.role !== 'admin') {
-      alert("Unauthorized Access. Admins only.");
-      navigate('/');
+    if(!user) {
+      navigate('/login', { state: { isRegister: true } });
       return;
     }
 
@@ -103,13 +102,13 @@ const AdminJobPosting = () => {
     }
   };
 
-  if(!user || user.role !== 'admin') return null;
+  if(!user) return null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-[#113253]">Admin Portal</h2>
-        <p className="text-gray-500 mt-2">Manage job postings and review applications matching your criteria.</p>
+        <h2 className="text-3xl font-extrabold text-[#113253]">Post a Job / Network Dashboard</h2>
+        <p className="text-gray-500 mt-2">Manage your job postings and review globally matched applications.</p>
       </div>
 
       {/* Main Grid Layout */}

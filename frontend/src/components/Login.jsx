@@ -19,7 +19,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', captcha: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', mobile_number: '', password: '', captcha: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [captchaTarget, setCaptchaTarget] = useState('');
@@ -58,7 +58,7 @@ const Login = () => {
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     const body = isLogin 
       ? { email: formData.email, password: formData.password }
-      : { name: formData.name, email: formData.email, password: formData.password, role };
+      : { name: formData.name, email: formData.email, mobile_number: formData.mobile_number, password: formData.password };
       
     try {
       const response = await fetch(`${endpoint}`, {
@@ -69,9 +69,15 @@ const Login = () => {
       const data = await response.json();
       
       if (response.ok) {
-        addNotification(data.message || (isLogin ? 'Login successfully!' : 'Signup successfully!'), 'success');
-        login(data.user, data.token);
-        navigate('/');
+        if (isLogin) {
+          addNotification(data.message || 'Login successfully!', 'success');
+          login(data.user, data.token);
+          navigate('/');
+        } else {
+          addNotification(data.message || 'Signup successfully! Please login.', 'success');
+          setIsLogin(true);
+          setFormData({...formData, password: '', captcha: ''}); // clear sensitive info
+        }
       } else {
         addNotification(data.error || 'Identity Verification Failed', 'error');
         setCaptchaTarget(generateCaptcha()); // Reset on error
@@ -135,23 +141,28 @@ const Login = () => {
                  onSubmit={handleSubmit} className="flex flex-col gap-4"
                >
                  {!isLogin && (
-                    <div className="flex bg-white/50 backdrop-blur border border-white/60 rounded-full p-1 mb-2 shadow-inner">
-                      <button type="button" onClick={() => setRole('aspirant')}
-                              className={`flex-1 py-2 px-4 rounded-full text-[11px] font-extrabold uppercase transition-all ${role === 'aspirant' ? 'bg-[#806bf8] text-white shadow-md' : 'text-gray-500'}`}>Aspirant</button>
-                      <button type="button" onClick={() => setRole('employer')}
-                              className={`flex-1 py-2 px-4 rounded-full text-[11px] font-extrabold uppercase transition-all ${role === 'employer' ? 'bg-[#489895] text-white shadow-md' : 'text-gray-500'}`}>Employer</button>
-                    </div>
+                    <></>
                  )}
 
                  {!isLogin && (
-                   <div className="relative">
-                     <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
-                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                     </span>
-                     <input type="text" placeholder={role === 'employer' ? "Company Name" : "Full Name"} required 
-                            value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-                            className="w-full bg-white/60 backdrop-blur text-sm font-bold text-[#1f2937] rounded-full py-3.5 pl-12 pr-5 outline-none border border-white/50 shadow-inner focus:border-[#806bf8] focus:bg-white transition-all placeholder-gray-500" />
-                   </div>
+                   <>
+                     <div className="relative mb-4">
+                       <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                       </span>
+                       <input type="text" placeholder="Full Name" required 
+                              value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+                              className="w-full bg-white/60 backdrop-blur text-sm font-bold text-[#1f2937] rounded-full py-3.5 pl-12 pr-5 outline-none border border-white/50 shadow-inner focus:border-[#806bf8] focus:bg-white transition-all placeholder-gray-500" />
+                     </div>
+                     <div className="relative mb-4">
+                       <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                       </span>
+                       <input type="tel" placeholder="Mobile Number" required minLength="10"
+                              value={formData.mobile_number} onChange={(e) => setFormData({...formData, mobile_number: e.target.value})}
+                              className="w-full bg-white/60 backdrop-blur text-sm font-bold text-[#1f2937] rounded-full py-3.5 pl-12 pr-5 outline-none border border-white/50 shadow-inner focus:border-[#806bf8] focus:bg-white transition-all placeholder-gray-500" />
+                     </div>
+                   </>
                  )}
 
                  <div className="relative">
@@ -226,7 +237,8 @@ const Login = () => {
                 <p className="text-[12px] font-bold text-gray-500">
                   {isLogin ? "Don't have an account? " : "Already have an account? "}
                   <button 
-                    onClick={() => { setIsLogin(!isLogin); setFormData({name:'',email:'',password:'',captcha:''}); setRole('aspirant'); }} 
+                    type="button"
+                    onClick={() => { setIsLogin(!isLogin); setFormData({name:'', email:'', mobile_number:'', password:'', captcha:''}); setRole('admin'); }} 
                     className="text-[#1f2937] hover:text-[#806bf8] transition-colors uppercase tracking-widest ml-1"
                   >
                     {isLogin ? 'Sign Up' : 'Sign In'}

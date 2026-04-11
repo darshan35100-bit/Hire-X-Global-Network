@@ -6,14 +6,15 @@ import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { token, login, user } = useContext(AuthContext);
+  const { token, login, logout, user } = useContext(AuthContext);
   const { addNotification } = useContext(NotificationContext);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', education: '', experience: 0, about: '', skills: '', location: '', avatar: ''
+    name: '', mobile_number: '', education: '', experience: 0, about: '', skills: '', location: '', avatar: ''
   });
+  const [appliedJobs, setAppliedJobs] = useState([]);
 
   useEffect(() => {
     if (!token) {
@@ -21,7 +22,22 @@ const Profile = () => {
       return;
     }
     fetchProfile();
+    fetchApplications();
   }, [token, navigate]);
+
+  const fetchApplications = async () => {
+    try {
+      const res = await fetch('/api/applications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.ok) {
+        const data = await res.json();
+        if(data && data.applied) setAppliedJobs(data.applied);
+      }
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -33,6 +49,7 @@ const Profile = () => {
         setProfile(data);
         setFormData({
           name: data.name || '',
+          mobile_number: data.mobile_number || '',
           education: data.education || '',
           experience: data.experience || 0,
           about: data.about || '',
@@ -40,6 +57,11 @@ const Profile = () => {
           location: data.location || '',
           avatar: data.avatar || ''
         });
+      } else {
+        if (res.status === 404 || res.status === 401 || res.status === 403) {
+          logout(); // Log them out so they go back to Login
+          addNotification("Session expired or user deleted. Please log in again.", "error");
+        }
       }
     } catch(err) {
       console.error(err);
@@ -163,6 +185,11 @@ const Profile = () => {
                    <p className="text-[#113253] font-bold text-lg">{profile.location || 'Not specified'}</p>
                  </div>
                  <div>
+                   <p className="text-xs font-black text-[#489895] uppercase tracking-widest mb-2 shadow-sm inline-block px-3 py-1 bg-[#e2f0ef] rounded-md">Contact</p>
+                   <p className="text-[#113253] font-bold text-sm mb-1">📱 {profile.mobile_number || '+0000000000'}</p>
+                   <p className="text-[#113253] font-bold text-sm">📧 {profile.email || 'N/A'}</p>
+                 </div>
+                 <div>
                    <p className="text-xs font-black text-[#489895] uppercase tracking-widest mb-2 shadow-sm inline-block px-3 py-1 bg-[#e2f0ef] rounded-md">Experience</p>
                    <p className="text-[#113253] font-bold text-lg">{profile.experience}+ Years Tracking</p>
                  </div>
@@ -190,6 +217,10 @@ const Profile = () => {
                    <input type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-white border border-gray-200 text-[#113253] font-bold rounded-xl py-3 px-4 outline-none focus:border-[#806bf8] focus:ring-1 focus:ring-[#806bf8] transition-all shadow-inner" />
                  </div>
                  <div className="space-y-1">
+                   <label className="text-xs font-black text-gray-500 uppercase tracking-widest">Mobile Number</label>
+                   <input type="tel" value={formData.mobile_number} onChange={e=>setFormData({...formData, mobile_number: e.target.value})} className="w-full bg-white border border-gray-200 text-[#113253] font-bold rounded-xl py-3 px-4 outline-none focus:border-[#4facfe] focus:ring-1 focus:ring-[#4facfe] transition-all shadow-inner" />
+                 </div>
+                 <div className="space-y-1 md:col-span-2">
                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">Location (City, Country)</label>
                    <input type="text" value={formData.location} onChange={e=>setFormData({...formData, location: e.target.value})} className="w-full bg-white border border-gray-200 text-[#113253] font-bold rounded-xl py-3 px-4 outline-none focus:border-[#489895] focus:ring-1 focus:ring-[#489895] transition-all shadow-inner" />
                  </div>
@@ -243,6 +274,38 @@ const Profile = () => {
                </div>
              </form>
            )}
+
+            {/* My Applications Section */}
+            <div className="mt-12 pt-8 border-t border-gray-100">
+               <h3 className="text-3xl font-black text-[#113253] mb-6">My Applications</h3>
+               {appliedJobs && appliedJobs.length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   {appliedJobs.map((app) => (
+                     <div key={app.id} className="bg-white/60 backdrop-blur-md rounded-2xl p-6 border border-white/40 shadow-sm flex flex-col justify-between">
+                       <div>
+                         <h4 className="text-xl font-bold text-[#113253] mb-2">{app.role}</h4>
+                         <p className="text-sm font-bold text-gray-400 mb-4">{app.location}</p>
+                         <p className="text-xs font-semibold text-gray-600 mb-2">ATS Score: {app.ats_score}%</p>
+                       </div>
+                       
+                       <div className="mt-4 flex items-center justify-between">
+                         <span className="text-[10px] font-black tracking-widest uppercase text-gray-400">Status</span>
+                         <span className={`
+                           px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest relative overflow-hidden backdrop-blur-xl border
+                           ${app.status === 'Shortlisted' ? 'bg-green-500/20 text-green-700 border-green-500/30 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]' : 
+                             app.status === 'Rejected' ? 'bg-red-500/20 text-red-700 border-red-500/30 drop-shadow-[0_0_10px_rgba(248,113,113,0.5)]' : 
+                             'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]'}
+                         `}>
+                           {app.status || 'Pending'}
+                         </span>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <p className="text-gray-500 font-medium text-sm">You haven't applied to any global roles yet. Start exploring jobs!</p>
+               )}
+            </div>
 
         </motion.div>
       </div>

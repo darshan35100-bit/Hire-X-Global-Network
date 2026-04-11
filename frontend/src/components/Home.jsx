@@ -138,20 +138,26 @@ const Home = () => {
                   <div className="flex-1 flex items-center px-6 py-5 md:py-0 border-b md:border-b-0 md:border-r border-gray-100">
                     <span className="text-2xl mr-4 opacity-50 relative top-[1px]">🔍</span>
                     <input type="text" placeholder="What are you looking for?" 
-                      className="w-full bg-transparent outline-none text-[#113253] font-bold text-[15px] placeholder-gray-400"
+                      className="w-full bg-transparent outline-none text-[#113253] font-bold text-sm md:text-base placeholder-gray-400"
                       value={searchTitle} onChange={(e) => { setSearchTitle(e.target.value); setSearchError(''); }} 
                     />
                   </div>
                   <div className="flex-1 flex items-center px-6 py-5 md:py-0">
                     <span className="text-2xl mr-4 opacity-50 relative top-[1px]">📍</span>
                     <input type="text" placeholder="Location, City" 
-                      className="w-full bg-transparent outline-none text-[#113253] font-bold text-[15px] placeholder-gray-400"
+                      className="w-full bg-transparent outline-none text-[#113253] font-bold text-sm md:text-base placeholder-gray-400"
                       value={searchCity} onChange={(e) => { setSearchCity(e.target.value); setSearchError(''); }} 
                     />
                   </div>
                   <div className="p-2">
-                    <button onClick={() => fetchJobs(searchTitle, searchCity)}
-                      className="w-full md:w-auto bg-[#113253] text-white font-extrabold py-5 px-12 rounded-[18px] text-[15px] transition-all duration-300 transform hover:-translate-y-2 hover:brightness-90 active:scale-95 shadow-lg hover:shadow-2xl flex items-center justify-center">
+                    <button onClick={() => {
+                      if (!searchTitle.trim() && !searchCity.trim()) {
+                        setSearchError('Job title or location is required!');
+                        return;
+                      }
+                      navigate(`/jobs?title=${encodeURIComponent(searchTitle)}&location=${encodeURIComponent(searchCity)}`);
+                    }}
+                      className="w-full md:w-auto bg-[#113253] text-white font-extrabold py-4 px-8 md:py-5 md:px-12 rounded-[18px] text-sm md:text-base transition-all duration-300 transform hover:-translate-y-2 hover:brightness-90 active:scale-95 shadow-lg hover:shadow-2xl flex items-center justify-center">
                       Explore
                     </button>
                   </div>
@@ -247,7 +253,7 @@ const Home = () => {
                   </div>
 
                   <button onClick={() => handleApply(job.id)} disabled={analyzingMap[job.id]}
-                     className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all uppercase tracking-widest text-[12px] shadow-sm relative z-10 disabled:opacity-75 disabled:cursor-wait">
+                     className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all uppercase tracking-widest text-[11px] md:text-xs shadow-sm relative z-10 disabled:opacity-75 disabled:cursor-wait">
                     {analyzingMap[job.id] ? 'Analyzing CV...' : 'Submit Application'}
                   </button>
                 </motion.div>

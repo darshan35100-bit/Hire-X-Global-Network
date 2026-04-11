@@ -34,7 +34,9 @@ const AdminJobPosting = () => {
     })
       .then(res => res.json())
       .then(data => {
-        if(Array.isArray(data)) {
+        if(data && data.received) {
+          setApplications(data.received);
+        } else if (Array.isArray(data)) {
           setApplications(data);
         }
       })
@@ -84,18 +86,19 @@ const AdminJobPosting = () => {
     }
   };
 
-  const handleShortlist = async (appId) => {
+  const handleStatusUpdate = async (appId, newStatus) => {
     try {
-      const res = await fetch(`/api/applications/${appId}/shortlist`, {
+      const res = await fetch(`/api/applications/${appId}/status`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
-        }
+        },
+        body: JSON.stringify({ status: newStatus })
       });
       if(res.ok) {
-        // Notification fired!
-        alert(`Candidate Shortlisted! Notification sent in real-time.`);
-        setApplications(applications.map(app => app.id === appId ? { ...app, status: 'Shortlisted' } : app));
+        if(newStatus === 'Shortlisted') alert(`Candidate Shortlisted! Notification sent.`);
+        setApplications(applications.map(app => app.id === appId ? { ...app, status: newStatus } : app));
       }
     } catch (err) {
       console.error(err);
@@ -262,23 +265,49 @@ const AdminJobPosting = () => {
               return matches;
             }).map(app => (
               <div key={app.id} className="border border-gray-200 p-4 rounded-xl bg-gray-50 shadow-sm border-l-4 border-l-[#489895]">
-                <h4 className="font-bold text-[#113253]">{app.applicant_name}</h4>
-                <p className="text-sm text-gray-600">{app.role}</p>
-                <div className="mt-2 text-xs font-bold text-[#489895] flex gap-2">
+                <div className="flex justify-between items-start mb-1">
+                   <h4 className="font-bold text-[#113253] text-lg">{app.applicant_name}</h4>
+                   {app.ats_score && (
+                     <span className={`px-2 py-1 rounded text-xs font-bold ${app.ats_score > 75 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                       ATS: {app.ats_score}%
+                     </span>
+                   )}
+                </div>
+                <p className="text-sm font-bold text-[#4facfe] mb-2">{app.role}</p>
+                <div className="text-xs text-gray-500 mb-2 font-medium">
+                  <p>📧 {app.email || 'N/A'}</p>
+                  <p>📱 {app.mobile_number || 'N/A'}</p>
+                </div>
+                {app.cv_analysis && <p className="text-xs text-gray-600 mb-3 italic">"{app.cv_analysis}"</p>}
+                
+                <div className="text-xs font-bold text-[#489895] flex gap-2">
                   <span className="bg-[#e2f0ef] px-2 py-1 rounded">Edu: {app.education || 'N/A'}</span>
                   <span className="bg-[#e2f0ef] px-2 py-1 rounded">Exp: {app.experience || '0'} Yrs</span>
                 </div>
-                {app.status === 'Shortlisted' ? (
-                  <div className="mt-3 w-full bg-green-100 text-green-700 text-sm font-bold py-2 rounded text-center">
-                    Shortlisted
-                  </div>
-                ) : (
+                <div className="mt-3 flex gap-2">
                   <button 
-                    onClick={() => handleShortlist(app.id)}
-                    className="mt-3 w-full bg-[#113253] hover:bg-[#0c243c] text-white text-sm font-bold py-2 rounded transition-colors"
+                    onClick={() => handleStatusUpdate(app.id, 'Shortlisted')}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded transition-colors"
                   >
-                    Shortlist Candidate
+                    Shortlist
                   </button>
+                  <button 
+                    onClick={() => handleStatusUpdate(app.id, 'In Review')}
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-2 rounded transition-colors"
+                  >
+                    Review
+                  </button>
+                  <button 
+                    onClick={() => handleStatusUpdate(app.id, 'Rejected')}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded transition-colors"
+                  >
+                    Reject
+                  </button>
+                </div>
+                {app.status && app.status !== 'Pending' && (
+                  <div className={`mt-2 text-center text-xs font-bold p-1 rounded ${app.status === 'Shortlisted' ? 'text-green-700' : app.status === 'Rejected' ? 'text-red-700' : 'text-yellow-700'}`}>
+                    Current: {app.status}
+                  </div>
                 )}
               </div>
             ))}

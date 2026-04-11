@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Home from './components/Home';
 import AdminJobPosting from './components/AdminJobPosting';
@@ -43,6 +43,7 @@ function GlobalNotificationListener() {
 
 function App() {
   const { user, logout } = useContext(AuthContext);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <Router>
@@ -94,15 +95,46 @@ function App() {
 
               {/* Mobile menu button */}
               <div className="lg:hidden flex items-center">
-                <button className="text-[#113253] hover:text-[#489895] outline-none">
+                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-[#113253] hover:text-[#489895] outline-none">
                   <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                    {mobileMenuOpen ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                    )}
                   </svg>
                 </button>
               </div>
 
             </div>
           </div>
+          
+          {/* Mobile Menu Content */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden bg-white border-t border-gray-100">
+              <div className="px-4 pt-2 pb-6 space-y-2 flex flex-col">
+                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Home</Link>
+                <Link to="/jobs" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Explore Opportunities</Link>
+                <Link to="/post-job" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Post a Job</Link>
+                <Link to="/articles" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Articles</Link>
+                <div className="px-3 py-2"><HireIQ /></div>
+                
+                {user ? (
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col space-y-3">
+                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-3 px-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 shadow-sm flex items-center justify-center overflow-hidden">
+                        {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" /> : <span className="font-bold">{user.name.charAt(0)}</span>}
+                      </div>
+                      <span className="text-[#489895] font-bold">My Profile</span>
+                    </Link>
+                    <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="mx-3 mt-2 px-5 py-3 bg-red-500 text-white font-bold rounded-lg text-left">Logout</button>
+                  </div>
+                ) : (
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block mx-3 mt-4 px-5 py-3 bg-[#489895] text-white font-extrabold rounded-lg text-center uppercase">Login / Register</Link>
+                )}
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Dynamic Routes */}

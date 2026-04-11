@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { askGemini } from '../utils/gemini';
 
 const HireIQ = () => {
   const { user, token } = useContext(AuthContext);
@@ -53,29 +54,31 @@ const HireIQ = () => {
     setIsTyping(true);
 
     try {
-      // Send chat request to backend API
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token || ''}`
-        },
-        body: JSON.stringify({
-          message: text,
-          // Exclude feedback markers or system intro from history for the API
-          history: messages.filter(m => m.sender !== 'bot-feedback' && m.id !== 1)
-        })
-      });
+      // Fetch available jobs directly to inject context
+      let jobsContext = "";
+      try {
+        const jobsRes = await fetch('/api/jobs');
+        if (jobsRes.ok) {
+          const jobsData = await jobsRes.json();
+          if (jobsData && jobsData.length > 0) {
+             jobsContext = "Available Jobs on Hire-X Platform right now:\n" + jobsData.map(j => `- Job Role: ${j.title}\n  Location: ${j.location}\n  Experience Required: ${j.years_experience} Yrs\n  Qualification: ${j.qualification}\n  Description Details: ${j.description}\n  -> Link to click & Apply: /jobs (Tell user to visit the Explore Opportunities or /jobs page to apply)`).join("\n\n");
+          }
+        }
+      } catch(e) {}
 
-      const data = await res.json();
-      const botResponse = res.ok ? data.text : "ಕ್ಷಮಿಸಿ, ಸರ್ವರ್ ದೋಷ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ. (Sorry, server error. Please try again.)";
+      // Call Gemini API directly from frontend
+      const chatHistory = messages.filter(m => m.sender !== 'bot-feedback' && m.id !== 1);
+      
+      const enrichedText = text + (jobsContext ? `\n\n[SYSTEM BACKGROUND CONTEXT to aid your answer: ${jobsContext}. If the user is asking for jobs, suggest from this exact list and specifically mention they can apply at the '/jobs' link. Provide very detailed responses comparing their skills if mentioned.]` : "");
+      
+      const botResponse = await askGemini(enrichedText, chatHistory);
 
       setMessages(prev => [...prev, 
         { id: Date.now() + 1, sender: 'bot', text: botResponse },
         { id: Date.now() + 2, sender: 'bot-feedback', text: "ಈ ಮಾಹಿತಿ ನಿಮಗೆ ಸಹಾಯವಾಯಿತೇ? (Did you find this information helpful?)" }
       ]);
     } catch (err) {
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'bot', text: "ನೆಟ್‌ವರ್ಕ್ ದೋಷ! (Network Error!)" }]);
+      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'bot', text: "ಕ್ಷಮಿಸಿ, ಈ ಸಮಯದಲ್ಲಿ ಪ್ರತಿಕ್ರಿಯೆ ಸಿಗುತ್ತಿಲ್ಲ. ಬೇರೊಂದು ಪ್ರಶ್ನೆ ಕೇಳಿ? (Sorry, I'm unable to answer right now. Could you ask a different question?)" }]);
     } finally {
       setIsTyping(false);
     }

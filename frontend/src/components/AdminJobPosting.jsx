@@ -1,323 +1,262 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { NotificationContext } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FaBuilding, FaBriefcase, FaMapMarkerAlt, FaCalendarAlt,
+  FaGraduationCap, FaUserAlt, FaCloudUploadAlt, FaPaperPlane,
+  FaFileAlt, FaInfoCircle
+} from 'react-icons/fa';
 
 const AdminJobPosting = () => {
-  const [formData, setFormData] = useState({ 
-    title: '', 
-    qualification: '', 
+  const [formData, setFormData] = useState({
+    company_name: '',
+    title: '',
+    qualification: '',
     description: '',
     education_level: '',
     years_experience: '',
-    location: ''
+    location: '',
+    company_logo: '',
+    official_notification: ''
   });
+  const [endDateDay, setEndDateDay] = useState('');
   const [status, setStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Mock Applications functionality 
-  const [applications, setApplications] = useState([]);
   const [formError, setFormError] = useState('');
 
   const { user, token } = useContext(AuthContext);
+  const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    if(!user) {
-      navigate('/login', { state: { isRegister: true } });
-      return;
-    }
 
-    fetch('/api/applications', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if(data && data.received) {
-          setApplications(data.received);
-        } else if (Array.isArray(data)) {
-          setApplications(data);
-        }
-      })
-      .catch(console.error);
-  }, [user, token, navigate]);
+  const today = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { state: { isRegister: true } });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
 
-    if (!formData.title || !formData.qualification || !formData.description) {
-      setFormError('Please fill in Title, Qualification, and Description.');
+    if (user && user.role === 'main_admin') {
+      alert("As the Main Administrator, you cannot access this feature. Access denied.");
+      return;
+    }
+
+    if (endDateDay < today) {
+      setFormError('ದಿನಾಂಕ ಇವತ್ತಿನ ಅಥವಾ ಮುಂದಿನ ದಿನದ್ದಾಗಿರಲಿ.');
+      return;
+    }
+
+    if (!formData.title || !formData.qualification || !formData.description || !endDateDay || !formData.education_level || !formData.years_experience || !formData.location) {
+      setFormError('ದಯವಿಟ್ಟು ಎಲ್ಲಾ ಕಡ್ಡಾಯ (Mandatory) ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ.');
       return;
     }
 
     setIsSubmitting(true);
-    setStatus('');
-    
+
     try {
-      // Numbers correctly formatted
       const payload = {
         ...formData,
-        years_experience: formData.years_experience ? parseInt(formData.years_experience) : null
+        end_date: `${endDateDay} 11:59 PM`
       };
 
       const res = await fetch('/api/jobs', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
-      
+
       if (res.ok) {
         setStatus('success');
-        setFormData({ title: '', qualification: '', description: '', education_level: '', years_experience: '', location: '' });
+        addNotification("Job published successfully!", "success");
+        setFormData({ company_name: '', title: '', qualification: '', description: '', education_level: '', years_experience: '', location: '', company_logo: '', official_notification: '' });
+        setEndDateDay('');
       } else {
         setStatus('error');
+        addNotification("Failed to publish job.", "error");
       }
-    } catch(err) {
-      console.error(err);
+    } catch (err) {
       setStatus('error');
+      addNotification("Network error while publishing job.", "error");
     } finally {
       setIsSubmitting(false);
       setTimeout(() => setStatus(''), 5000);
     }
   };
 
-  const handleStatusUpdate = async (appId, newStatus) => {
-    try {
-      const res = await fetch(`/api/applications/${appId}/status`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if(res.ok) {
-        if(newStatus === 'Shortlisted') alert(`Candidate Shortlisted! Notification sent.`);
-        setApplications(applications.map(app => app.id === appId ? { ...app, status: newStatus } : app));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (!user) return null;
 
-  if(!user) return null;
+  // Modern Styled Classes
+  const cardStyle = "bg-white/70 backdrop-blur-2xl border border-white/80 rounded-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] overflow-hidden";
+  const inputWrapper = "relative group";
+  const labelStyle = "flex items-center gap-2 text-[12px] font-black text-[#1a3a34]/70 mb-2 uppercase tracking-widest ml-2";
+  const inputStyle = "w-full bg-white/50 border-2 border-emerald-100/50 rounded-2xl py-4 px-5 focus:border-emerald-400 focus:bg-white outline-none transition-all duration-300 font-bold text-gray-700 shadow-sm group-hover:shadow-md pr-12";
+  const iconStyle = "absolute right-5 top-[48px] text-emerald-300 group-focus-within:text-emerald-500 transition-colors duration-300 text-lg";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-[#113253]">Post a Job / Network Dashboard</h2>
-        <p className="text-gray-500 mt-2">Manage your job postings and review globally matched applications.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#f0fcf9] via-[#e6f7f2] to-[#f5fffb] py-16 px-4 flex flex-col items-center font-sans relative overflow-hidden">
 
-      {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Form Panel */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-            <div className="bg-[#113253] px-8 py-6 relative">
-              <h3 className="text-2xl font-bold text-white relative z-10 flex items-center">
-                Create New Job Posting
-              </h3>
+      {/* Soft Floating Bubbles / Water Drops */}
+      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-[100px] animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-[120px]"></div>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-20 right-10 opacity-10 rotate-12 transition-transform hover:scale-110"><FaLeaf size={100} className="text-emerald-900" /></div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center relative z-10">
+        <h2 className="text-5xl md:text-6xl font-black text-[#1a3a34] tracking-tight mb-4">
+          Launch a <span className="text-emerald-600">Career</span>
+        </h2>
+        <div className="flex items-center justify-center gap-2 text-emerald-800/40 font-black uppercase tracking-[0.4em] text-[10px]">
+          <div className="h-[2px] w-8 bg-emerald-200"></div>
+          Professional Job Portal
+          <div className="h-[2px] w-8 bg-emerald-200"></div>
+        </div>
+      </motion.div>
+
+      <div className="w-full max-w-5xl relative z-10">
+        <div className={cardStyle}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-8 border-b border-white/50 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white p-4 rounded-2xl shadow-sm text-emerald-600"><FaBriefcase size={24} /></div>
+              <div>
+                <h3 className="text-xl font-black text-[#1a3a34] uppercase tracking-wider">Job Details</h3>
+                <p className="text-emerald-700/50 text-xs font-bold">Fill everything to reach the best candidates</p>
+              </div>
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-8 flex flex-col md:flex-row gap-8">
-              
-              {/* Primary Requirements Sidebar / Matching Criteria */}
-              <div className="w-full md:w-1/3 space-y-6 bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                <h4 className="text-lg font-bold text-[#113253] mb-4 border-b pb-2 border-gray-200">Matching Criteria</h4>
-                
-                {formError && <div className="text-red-500 font-bold mb-4">{formError}</div>}
-                
-                <div>
-                  <label className="block text-sm font-bold text-[#113253] mb-2">
-                    Education Level
-                  </label>
-                  <select 
-                    value={formData.education_level}
-                    onChange={e => setFormData({...formData, education_level: e.target.value})}
-                    className="block w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-[#489895]"
-                  >
-                    <option value="">Any</option>
-                    <option value="High School">High School</option>
-                    <option value="Associate Degree">Associate Degree</option>
-                    <option value="Bachelor's Degree">Bachelor's Degree</option>
-                    <option value="Master's Degree">Master's Degree</option>
-                    <option value="Ph.D.">Ph.D.</option>
-                  </select>
-                </div>
+            <div className="hidden md:block bg-emerald-100/50 text-emerald-700 px-4 py-2 rounded-xl text-[10px] font-black border border-emerald-200 uppercase tracking-widest">
+              Admin Access
+            </div>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-[#113253] mb-2">
-                    Years of Experience
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="e.g. 3"
-                    value={formData.years_experience}
-                    onChange={e => setFormData({...formData, years_experience: e.target.value})}
-                    className="block w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-[#489895]"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-[#113253] mb-2">
-                    General Qualification
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. B.Tech CS"
-                    value={formData.qualification}
-                    onChange={e => setFormData({...formData, qualification: e.target.value})}
-                    className="block w-full border border-gray-300 rounded-md py-2 px-3 text-sm focus:ring-[#489895]"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="p-8 md:p-14">
+            <AnimatePresence>
+              {formError && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl mb-10 flex items-center gap-3 overflow-hidden">
+                  <FaInfoCircle /> <span className="text-sm font-bold">{formError}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+
+              {/* Company & Qualification */}
+              <div className={inputWrapper}>
+                <label className={labelStyle}>Company Name <span className="text-emerald-400">*</span></label>
+                <input type="text" required className={inputStyle} placeholder="Hire-X Solutions" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} />
+                <FaBuilding className={iconStyle} />
               </div>
 
-              {/* Main Content Fields */}
-              <div className="w-full md:w-2/3 space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-[#113253] mb-2">
-                    Job Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:ring-[#489895] text-gray-800"
-                    placeholder="e.g. Senior Frontend Developer"
-                    value={formData.title}
-                    onChange={e => setFormData({...formData, title: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-[#113253] mb-2">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:ring-[#489895] text-gray-800"
-                    placeholder="e.g. New York, NY"
-                    value={formData.location}
-                    onChange={e => setFormData({...formData, location: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                   <label className="block text-sm font-bold text-[#113253] mb-2">
-                     Job Description
-                   </label>
-                   <textarea
-                     rows={6}
-                     required
-                     className="block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 focus:ring-[#489895] text-gray-800 resize-y"
-                     placeholder="Provide the complete role description..."
-                     value={formData.description}
-                     onChange={e => setFormData({...formData, description: e.target.value})}
-                   />
-                </div>
-
-                <div className="pt-4 flex items-center justify-between">
-                  {status === 'success' ? (
-                    <span className="text-green-600 font-bold">Published successfully!</span>
-                  ) : <div/>}
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`
-                      py-3 px-8 rounded-lg shadow-md font-bold text-white transition-all 
-                      ${isSubmitting ? 'bg-gray-400' : 'bg-[#489895] hover:bg-[#387f7c]'}
-                    `}
-                  >
-                    {isSubmitting ? 'Publishing...' : 'Publish Job'}
-                  </button>
-                </div>
+              <div className={inputWrapper}>
+                <label className={labelStyle}>General Qualification <span className="text-emerald-400">*</span></label>
+                <input type="text" required className={inputStyle} placeholder="B.E, BCA, MCA" value={formData.qualification} onChange={e => setFormData({ ...formData, qualification: e.target.value })} />
+                <FaGraduationCap className={iconStyle} />
               </div>
-            </form>
-          </div>
-        </div>
 
-        {/* Right Panel: Applications Monitor */}
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 flex flex-col">
-          <div className="bg-[#113253] px-6 py-4">
-            <h3 className="text-xl font-bold text-white">Matching Applicants</h3>
-          </div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-4 max-h-[600px]">
-            {applications.filter(app => {
-              // Dynamic Matching Logic
-              let matches = true;
-              if (formData.education_level && app.education !== formData.education_level) {
-                // simple exact match layout for demonstration
-                matches = false; 
-              }
-              if (formData.years_experience && parseInt(app.experience) < parseInt(formData.years_experience)) {
-                matches = false;
-              }
-              return matches;
-            }).map(app => (
-              <div key={app.id} className="border border-gray-200 p-4 rounded-xl bg-gray-50 shadow-sm border-l-4 border-l-[#489895]">
-                <div className="flex justify-between items-start mb-1">
-                   <h4 className="font-bold text-[#113253] text-lg">{app.applicant_name}</h4>
-                   {app.ats_score && (
-                     <span className={`px-2 py-1 rounded text-xs font-bold ${app.ats_score > 75 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                       ATS: {app.ats_score}%
-                     </span>
-                   )}
-                </div>
-                <p className="text-sm font-bold text-[#4facfe] mb-2">{app.role}</p>
-                <div className="text-xs text-gray-500 mb-2 font-medium">
-                  <p>📧 {app.email || 'N/A'}</p>
-                  <p>📱 {app.mobile_number || 'N/A'}</p>
-                </div>
-                {app.cv_analysis && <p className="text-xs text-gray-600 mb-3 italic">"{app.cv_analysis}"</p>}
-                
-                <div className="text-xs font-bold text-[#489895] flex gap-2">
-                  <span className="bg-[#e2f0ef] px-2 py-1 rounded">Edu: {app.education || 'N/A'}</span>
-                  <span className="bg-[#e2f0ef] px-2 py-1 rounded">Exp: {app.experience || '0'} Yrs</span>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button 
-                    onClick={() => handleStatusUpdate(app.id, 'Shortlisted')}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded transition-colors"
-                  >
-                    Shortlist
-                  </button>
-                  <button 
-                    onClick={() => handleStatusUpdate(app.id, 'In Review')}
-                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-2 rounded transition-colors"
-                  >
-                    Review
-                  </button>
-                  <button 
-                    onClick={() => handleStatusUpdate(app.id, 'Rejected')}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded transition-colors"
-                  >
-                    Reject
-                  </button>
-                </div>
-                {app.status && app.status !== 'Pending' && (
-                  <div className={`mt-2 text-center text-xs font-bold p-1 rounded ${app.status === 'Shortlisted' ? 'text-green-700' : app.status === 'Rejected' ? 'text-red-700' : 'text-yellow-700'}`}>
-                    Current: {app.status}
+              {/* Title & Experience */}
+              <div className={inputWrapper}>
+                <label className={labelStyle}>Job Title <span className="text-emerald-400">*</span></label>
+                <input type="text" required className={inputStyle} placeholder="Full Stack Developer" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                <FaBriefcase className={iconStyle} />
+              </div>
+
+              <div className={inputWrapper}>
+                <label className={labelStyle}>Experience Level <span className="text-emerald-400">*</span></label>
+                <input type="text" required className={inputStyle} placeholder="Fresher / 2+ Years" value={formData.years_experience} onChange={e => setFormData({ ...formData, years_experience: e.target.value })} />
+                <FaUserAlt className={iconStyle} />
+              </div>
+
+              {/* Location & End Date */}
+              <div className={inputWrapper}>
+                <label className={labelStyle}>Work Location <span className="text-emerald-400">*</span></label>
+                <input type="text" required className={inputStyle} placeholder="Bengaluru, KA" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
+                <FaMapMarkerAlt className={iconStyle} />
+              </div>
+
+              <div className={inputWrapper}>
+                <label className={labelStyle}>Last Date to Apply <span className="text-emerald-400">*</span></label>
+                <input type="date" min={today} required className={inputStyle} value={endDateDay} onChange={e => setEndDateDay(e.target.value)} />
+                <FaCalendarAlt className={iconStyle} />
+              </div>
+
+              {/* Uploader Section - Glass Style */}
+              <div className="space-y-2">
+                <label className={labelStyle}>Company Logo <span className="text-gray-400 font-medium">(Optional)</span></label>
+                <div className="relative border-2 border-dashed border-emerald-100 rounded-2xl p-4 flex items-center justify-between bg-emerald-50/20 hover:bg-white transition-all cursor-pointer">
+                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFormData({ ...formData, company_logo: e.target.files[0]?.name })} />
+                  <div className="flex items-center gap-3">
+                    <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-600"><FaCloudUploadAlt /></div>
+                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload Logo</span>
                   </div>
-                )}
+                  <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.company_logo || "CHOOSE"}</span>
+                </div>
               </div>
-            ))}
-            {applications.length === 0 && <p className="text-gray-500 text-sm">No matching applications found.</p>}
-          </div>
-        </div>
 
+              <div className="space-y-2">
+                <label className={labelStyle}>Official Notification <span className="text-gray-400 font-medium">(Optional)</span></label>
+                <div className="relative border-2 border-dashed border-emerald-100 rounded-2xl p-4 flex items-center justify-between bg-emerald-50/20 hover:bg-white transition-all cursor-pointer">
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFormData({ ...formData, official_notification: e.target.files[0]?.name })} />
+                  <div className="flex items-center gap-3">
+                    <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-600"><FaFileAlt /></div>
+                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload Document</span>
+                  </div>
+                  <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.official_notification || "CHOOSE"}</span>
+                </div>
+              </div>
+
+              {/* Education Level */}
+              <div className="md:col-span-1">
+                <label className={labelStyle}>Education Level <span className="text-emerald-400">*</span></label>
+                <select required value={formData.education_level} onChange={e => setFormData({ ...formData, education_level: e.target.value })} className={`${inputStyle} appearance-none cursor-pointer`}>
+                  <option value="">Choose Level</option>
+                  <option value="High School">High School</option>
+                  <option value="Bachelor's Degree">Bachelor's Degree</option>
+                  <option value="Master's Degree">Master's Degree</option>
+                </select>
+              </div>
+
+              {/* Description */}
+              <div className="md:col-span-2">
+                <label className={labelStyle}>Detailed Description <span className="text-emerald-400">*</span></label>
+                <textarea rows={5} required className="w-full bg-white/50 border-2 border-emerald-100/50 rounded-[30px] py-6 px-8 focus:border-emerald-400 focus:bg-white outline-none transition-all font-bold text-gray-700 shadow-sm resize-none" placeholder="Explain the role, salary, and requirements..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+              </div>
+            </div>
+
+            {/* Submit */}
+            <div className="mt-16 flex flex-col items-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(16, 185, 129, 0.2)" }}
+                whileTap={{ scale: 0.95 }}
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#10b981] hover:bg-[#059669] text-white font-black py-6 px-20 rounded-[28px] shadow-2xl flex items-center gap-4 tracking-[0.3em] uppercase text-sm transition-all"
+              >
+                {isSubmitting ? 'Publishing...' : 'Publish Job'}
+                <FaPaperPlane className="text-xs" />
+              </motion.button>
+              <p className="text-[10px] font-bold text-emerald-800/30 uppercase tracking-widest italic">All details are encrypted and safe</p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
+
+// Simple Leaf Component for background
+const FaLeaf = ({ size, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z" />
+  </svg>
+);
 
 export default AdminJobPosting;

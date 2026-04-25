@@ -6,13 +6,96 @@
   --color-bg-light: #F1F5F9;
 }
 
-body {
-  background-color: var(--color-bg-light, #F1F5F9);
-  color: var(--color-primary-navy, #113253);
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-[#F1F5F9] text-[#113253] m-0 font-sans antialiased;
+  }
+  button, [role="button"], a, input[type="submit"], input[type="button"] {
+    cursor: pointer !important;
+  }
+}
+
+/* Custom Animation Keyframes */
+@keyframes popTop3s {
+  0%, 75% { opacity: 0; transform: translateY(-40px) scale(0.9); }
+  80%, 95% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+}
+
+@keyframes boxBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes spinBorder {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes phaseLogo {
+  0%, 60% { opacity: 1; transform: scale(1); }
+  65%, 100% { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes phaseEagle {
+  0%, 60% { opacity: 0; transform: scale(0.8); }
+  65%, 100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-pop-top {
+  animation: popTop3s 3s infinite cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.box-blink-anim {
+  animation: boxBlink 1.5s infinite alternate ease-in-out;
+}
+
+.rotating-border-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+.rotating-border-box::before {
+  content: '';
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 400%;
+  height: 400%;
+  background: conic-gradient(transparent, transparent, transparent, #10b981);
+  animation: spinBorder 2s linear infinite;
+  z-index: 0;
+}
+
+.rotating-border-box::after {
+  content: '';
+  position: absolute;
+  inset: 3px; /* Thicker green line */
+  background: white;
+  border-radius: calc(0.5rem - 3px);
+  z-index: 0;
+}
+
+.rotating-border-content {
+  position: relative;
+  z-index: 1;
+}
+
+.phase-logo {
+  animation: phaseLogo 6s infinite ease-in-out;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phase-eagle {
+  animation: phaseEagle 6s infinite ease-in-out;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

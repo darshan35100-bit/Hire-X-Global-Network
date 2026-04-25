@@ -1,37 +1,24 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const nodemailer = require('nodemailer');
+const sendEmail = require('./utils/sendEmail');
+const emailValidator = require('deep-email-validator');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecrethirex123';
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'admin@hire-x.com',
-    pass: process.env.EMAIL_PASS || 'mock-password'
-  }
-});
-
-const sendSMS = (mobile, message) => {
-  console.log(`[Twilio Mock SMS] Sent to: ${mobile} - Msg: ${message}`);
-};
 
 // Database Initialization (Auto-create tables)
 async function initDB() {
   try {
     await pool.query(`
-      DROP TABLE IF EXISTS Applications CASCADE;
-      DROP TABLE IF EXISTS Jobs CASCADE;
-      DROP TABLE IF EXISTS Users CASCADE;
-
       CREATE TABLE IF NOT EXISTS Users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100),
@@ -49,60 +36,106 @@ async function initDB() {
       );
       CREATE TABLE IF NOT EXISTS Jobs (
         id SERIAL PRIMARY KEY,
-        employer_id INTEGER REFERENCES Users(id),
+        employer_id INTEGER REFERENCES Users(id) ON DELETE SET NULL,
+        company_name VARCHAR(150),
         title VARCHAR(100),
         qualification VARCHAR(100),
         description TEXT,
         education_level VARCHAR(50),
-        years_experience INTEGER,
+        years_experience VARCHAR(50),
         location VARCHAR(100),
+        company_logo TEXT,
+        official_notification TEXT,
+        end_date DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
       CREATE TABLE IF NOT EXISTS Applications (
         id SERIAL PRIMARY KEY,
-        job_id INTEGER REFERENCES Jobs(id),
-        user_id INTEGER REFERENCES Users(id),
+        job_id INTEGER REFERENCES Jobs(id) ON DELETE SET NULL,
+        user_id INTEGER REFERENCES Users(id) ON DELETE SET NULL,
+        employer_id INTEGER REFERENCES Users(id) ON DELETE SET NULL,
         status VARCHAR(20) DEFAULT 'Pending',
         cv_url TEXT,
         ats_score INTEGER,
         cv_analysis TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS Feedbacks (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        role VARCHAR(100),
+        text TEXT,
+        avatar TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS Suggestions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES Users(id) ON DELETE SET NULL,
+        name VARCHAR(100),
+        email VARCHAR(100),
+        text TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS Articles (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255),
+        category VARCHAR(100),
+        description TEXT,
+        content TEXT,
+        read_time VARCHAR(50),
+        image_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      ALTER TABLE Jobs ADD COLUMN IF NOT EXISTS company_name VARCHAR(150);
+      ALTER TABLE Users ADD COLUMN IF NOT EXISTS dob VARCHAR(30);
+      ALTER TABLE Feedbacks ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES Users(id) ON DELETE SET NULL;
+      DO $$ 
+      BEGIN
+        
+        ALTER TABLE Applications DROP CONSTRAINT IF EXISTS applications_job_id_fkey;
+        ALTER TABLE Applications ADD CONSTRAINT applications_job_id_fkey FOREIGN KEY (job_id) REFERENCES Jobs(id) ON DELETE SET NULL;
+        ALTER TABLE Applications DROP CONSTRAINT IF EXISTS applications_user_id_fkey;
+        ALTER TABLE Applications ADD CONSTRAINT applications_user_id_fkey FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL;
+        ALTER TABLE Applications ADD COLUMN IF NOT EXISTS employer_id INTEGER REFERENCES Users(id) ON DELETE SET NULL;
+      EXCEPTION WHEN OTHERS THEN 
+        -- Ignore errors if constraints don't exist or syntax varies
+      END $$;
       
       -- Seed Mock Users and Jobs
-      INSERT INTO Users (name, email, password, role, profile_progress) VALUES 
-      ('Hire-X Global Admin', 'admin@hire-x.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 100),
-      ('Sarah Connor', 'sarah@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('John Doe', 'john@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('Tech Lead Admin', 'lead@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 60),
-      ('HR Manager', 'hr@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('Design Head', 'design@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('Marketing Pro', 'market@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('QA Lead', 'qa@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('DevOps Master', 'devops@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50),
-      ('Product Owner', 'po@example.com', '$2a$10$T8Z4m1a/6n5Vv2k.A4e9OOWaC5mD6E7.eA/lGvN3gH8eD2c.6LgS2', 'admin', 50)
+      INSERT INTO Users (name, email, password, role, profile_progress, mobile_number, about, location) VALUES 
+      ('Hire-X Global Network', 'kmthecoder@gmail.com', '$2b$10$5Tf5iB1.zwUJNkEfX11CE.ksmKLfbIR28BaI0pi44TbwigC9R8vWC', 'main_admin', 100, '0000000000', 'Main Administrator Account for Hire-X Global Network.', 'Global')
       ON CONFLICT (email) DO NOTHING;
-
-      -- Seed Mock Jobs
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM Jobs) THEN
-          INSERT INTO Jobs (employer_id, title, qualification, description, education_level, years_experience, location) VALUES
-          (2, 'Senior React Developer', 'B.Tech/MCA', 'Looking for an experienced React developer to lead our frontend team. Must know Redux and Hooks perfectly.', 'Bachelors', 5, 'San Francisco, CA'),
-          (3, 'Backend Node.js Engineer', 'B.Sc/B.Tech', 'Strong skills in Node.js, Express, Postgres required. Microservices experience is a plus.', 'Bachelors', 3, 'New York, NY'),
-          (4, 'Full Stack Web Developer', 'Any Degree', 'Full stack role requiring React and Node.js. Fast paced environment.', 'Bachelors', 2, 'Remote'),
-          (5, 'HR Talent Acquisition', 'MBA/BBA', 'Looking for an HR professional to help scale our teams. Good communication is essential.', 'Masters', 4, 'London, UK'),
-          (6, 'UX/UI Designer', 'B.Des/Any', 'Figma expert needed for an upcoming AI product.', 'Bachelors', 3, 'Berlin, Germany'),
-          (7, 'Digital Marketing Manager', 'MBA', 'SEO, SEM, Social Media expert to lead marketing campaigns globally.', 'Masters', 5, 'Remote'),
-          (8, 'QA Automation Engineer', 'B.Tech', 'Selenium, Cypress, and Jest. Ensure our products are bug free.', 'Bachelors', 2, 'Bangalore, India'),
-          (9, 'DevOps Cloud Engineer', 'B.E/B.Tech', 'AWS, Docker, Kubernetes mastery required to maintain 99.9% uptime.', 'Bachelors', 4, 'Seattle, WA'),
-          (10, 'Product Manager', 'MBA/B.Tech', 'Define product vision and manage roadmaps for our SaaS platform.', 'Masters', 6, 'Austin, TX'),
-          (2, 'Machine Learning Engineer', 'M.Tech/Ph.D', 'Python, PyTorch, TensorFlow. Build our next generation AI algorithms.', 'Masters', 3, 'Toronto, Canada'),
-          (3, 'iOS Developer', 'B.Tech', 'Swift and Objective-C. Build fluid mobile experiences.', 'Bachelors', 3, 'San Francisco, CA'),
-          (4, 'Android Developer', 'B.Tech', 'Kotlin expert for our main mobile application.', 'Bachelors', 3, 'Remote');
-        END IF;
-      END $$;
     `);
+
+    // Seed 15 Articles if table is empty
+    const articlesCheck = await pool.query('SELECT COUNT(*) FROM Articles');
+    if (parseInt(articlesCheck.rows[0].count) === 0) {
+      const sampleArticles = [
+        { title: 'Mastering React in 2026', category: 'Tech News', desc: 'A deep dive into Server Components and state management.', time: '5 min read' },
+        { title: 'Resume Building for Big Tech', category: 'Career Guidance', desc: 'How to bypass the modern ATS systems efficiently.', time: '8 min read' },
+        { title: 'AI in 2026: The New Normal', category: 'Tech News', desc: 'Generative AI is changing the landscape of software engineering.', time: '6 min read' },
+        { title: 'Top 10 Interview Tips', category: 'Interview Tips', desc: 'Stand out in your next technical interview.', time: '4 min read' },
+        { title: 'The Future of Remote Work', category: 'Career Guidance', desc: 'Why hybrid models are winning in the global market.', time: '7 min read' },
+        { title: 'Understanding System Design', category: 'Tech News', desc: 'A beginner\'s guide to scalable architecture.', time: '10 min read' },
+        { title: 'Salary Negotiation Tactics', category: 'Career Guidance', desc: 'Never leave money on the table again.', time: '5 min read' },
+        { title: 'Tailwind CSS vs Custom CSS', category: 'Tech News', desc: 'Why utility-first CSS frameworks are dominating.', time: '4 min read' },
+        { title: 'Behavioral Interviews 101', category: 'Interview Tips', desc: 'Mastering the STAR method for leadership roles.', time: '6 min read' },
+        { title: 'PostgreSQL Advanced Indexing', category: 'Tech News', desc: 'Speed up your queries with proper index strategies.', time: '8 min read' },
+        { title: 'Navigating Layoffs', category: 'Career Guidance', desc: 'How to bounce back stronger after losing your job.', time: '5 min read' },
+        { title: 'Live Coding Interview Prep', category: 'Interview Tips', desc: 'Overcoming stage fright during technical screens.', time: '7 min read' },
+        { title: 'Next.js 16 Features', category: 'Tech News', desc: 'What to expect in the next major release of Next.js.', time: '4 min read' },
+        { title: 'Building a Personal Brand', category: 'Career Guidance', desc: 'Why developers need to market themselves online.', time: '6 min read' },
+        { title: 'Mock Interviews: Do They Help?', category: 'Interview Tips', desc: 'The psychology behind practice interviews.', time: '3 min read' },
+      ];
+      for (const a of sampleArticles) {
+        await pool.query('INSERT INTO Articles (title, category, description, read_time, image_url) VALUES ($1, $2, $3, $4, $5)', [a.title, a.category, a.desc, a.time, 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80']);
+      }
+    }
+
     console.log("Database perfectly initialized for global scale.");
   } catch (err) {
     console.error("Failed to initialize database schema:", err);
@@ -111,22 +144,85 @@ async function initDB() {
 initDB();
 
 // --- Auth Endpoints ---
+app.post('/api/auth/send-verify-otp', async (req, res) => {
+  const { type, identifier } = req.body; // type is 'email'
+  try {
+    const adminCheck = await pool.query("SELECT email FROM Users WHERE role = 'main_admin'");
+    if (adminCheck.rows.length > 0 && identifier.toLowerCase() === adminCheck.rows[0].email.toLowerCase()) {
+      return res.status(400).json({ error: 'You are the Main Administrator, your account is already registered. Please login to continue.' });
+    }
+
+    const existing = await pool.query(`SELECT id FROM Users WHERE email = $1`, [identifier]);
+    if (existing.rows.length > 0) return res.status(400).json({ error: 'Account already registered, please try with another account or log in.' });
+
+    // Deep Email Existence Check
+    const emailValidation = await emailValidator.validate(identifier);
+    if (!emailValidation.valid) {
+      // If the email is completely invalid or doesn't exist mathematically/SMTP, block it immediately
+      return res.status(400).json({ error: 'Invalid email, please enter a valid email' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otps['verify_' + identifier] = otp;
+    
+    // emailExists condition is satisfied by deep validation above
+    const emailSent = await sendEmail({
+       to: identifier,
+       subject: `Hire-X Global Network Verification OTP`,
+       text: `Welcome to Hire-X!\n\nYou have successfully requested an email verification.\n\nYour Verification OTP is: ${otp}\n\nBest regards,\nHire-X Team`
+    });
+
+    if (!emailSent) {
+      delete otps['verify_' + identifier];
+      return res.status(400).json({ error: 'Invalid email, please enter a valid email' });
+    }
+
+    res.json({ message: "Email OTP sent successfully." });
+  } catch(err) {
+    res.status(500).json({ error: 'System error.' });
+  }
+});
+
+app.post('/api/auth/check-verify-otp', (req, res) => {
+  const { identifier, otp } = req.body;
+  if (otps['verify_' + identifier] && otps['verify_' + identifier] === otp) {
+    res.json({ success: true, message: "Verified successfully" });
+  } else {
+    res.status(400).json({ error: "Invalid OTP" });
+  }
+});
+
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password, mobile_number, education, experience } = req.body;
+  const { name, email, password, mobile_number, education, experience, emailOtp } = req.body;
   const userRole = 'admin'; // Everyone is admin now
   try {
+    const adminCheck = await pool.query("SELECT email FROM Users WHERE role = 'main_admin'");
+    if (adminCheck.rows.length > 0 && email.toLowerCase() === adminCheck.rows[0].email.toLowerCase()) {
+      return res.status(400).json({ error: 'You are the Main Administrator, your account is already registered. Please login to continue.' });
+    }
+    if (otps['verify_' + email] !== emailOtp) {
+      return res.status(400).json({ error: 'Invalid or missing OTP for Email.' });
+    }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    let progress = 30;
+    if (mobile_number && mobile_number.length >= 10) progress += 10;
+    if (education && education !== 'None') progress += 10;
+    if (experience !== null && experience !== undefined && experience !== '') progress += 10;
+
     const result = await pool.query(
-      'INSERT INTO Users (name, email, mobile_number, password, role, education, experience, profile_progress) VALUES ($1, $2, $3, $4, $5, $6, $7, 30) RETURNING id, name, email, mobile_number, role, education, experience, avatar, profile_progress',
-      [name, email, mobile_number || '', hashedPassword, userRole, education || 'None', experience ? parseInt(experience) : 0]
+      'INSERT INTO Users (name, email, mobile_number, password, role, education, experience, profile_progress) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, mobile_number, role, education, experience, avatar, profile_progress',
+      [name, email, mobile_number || '', hashedPassword, userRole, education || 'None', experience ? parseInt(experience) : 0, progress]
     );
     const user = result.rows[0];
-    // No token returned directly to force login
+    delete otps['verify_' + email];
     res.json({ user, message: "Welcome to Hire-X Global Network. Signup successfully! Please login to continue." });
   } catch (err) {
+    if (err.code === '23505') { // postgres unique violation
+      return res.status(400).json({ error: 'Account already registered, please try with another account or log in.' });
+    }
     console.error("Signup DB Error:", err);
-    res.status(400).json({ error: 'Registration failed. Identity may already be registered.' });
+    res.status(400).json({ error: 'Registration failed. Identity may already exist.' });
   }
 });
 
@@ -139,7 +235,7 @@ app.post('/api/auth/login', async (req, res) => {
       const validPass = await bcrypt.compare(password, user.password);
       if (validPass) {
         delete user.password;
-        const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET);
+        const token = jwt.sign({ id: user.id, role: user.role, email: user.email }, JWT_SECRET);
         res.json({ token, user, message: "Login successfully! Welcome back." });
       } else {
         res.status(401).json({ error: 'invalid password' });
@@ -149,6 +245,88 @@ app.post('/api/auth/login', async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: 'System error during login.' });
+  }
+});
+
+// Mock OTP storage (in memory for simplicity)
+const otps = {};
+
+app.post('/api/auth/destroy', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM Users WHERE email = $1', [email]);
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      const validPass = await bcrypt.compare(password, user.password);
+      if (validPass) {
+        await pool.query('DELETE FROM Users WHERE id = $1', [user.id]);
+        res.json({ message: "Account destroyed successfully." });
+      } else {
+        res.status(401).json({ error: 'Invalid password.' });
+      }
+    } else {
+      res.status(404).json({ error: 'Account not found.' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'System error during account destruction.' });
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase(); // email only
+  try {
+    const result = await pool.query('SELECT * FROM Users WHERE LOWER(email) = $1', [identifier]);
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      otps[identifier] = otp;
+      
+      const emailSent = await sendEmail({
+         to: identifier,
+         subject: `Password Reset OTP`,
+         text: `Hello,\n\nYou have successfully requested a password reset.\n\nYour OTP for resetting password is: ${otp}\n\nPlease do not share this with anyone.\n\nBest regards,\nHire-X Team`
+      });
+      
+      if (!emailSent) {
+         delete otps[identifier];
+         return res.status(400).json({ error: 'invalid email,please enter valid email.' });
+      }
+
+      res.json({ message: "OTP sent to your Registered Email." });
+    } else {
+      res.status(404).json({ error: 'This is not a registered email, please enter a registered email.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'System error.' });
+  }
+});
+
+app.post('/api/auth/check-forgot-otp', (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase();
+  const { otp } = req.body;
+  if (otps[identifier] && otps[identifier] === otp) {
+    res.json({ success: true, message: "Verified successfully" });
+  } else {
+    res.status(400).json({ error: "Invalid or expired OTP." });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase();
+  const { otp, newPassword } = req.body;
+  try {
+    if (otps[identifier] && otps[identifier] === otp) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      await pool.query('UPDATE Users SET password = $1 WHERE LOWER(email) = $2', [hashedPassword, identifier]);
+      delete otps[identifier];
+      res.json({ message: "Credentials successfully modified." });
+    } else {
+      res.status(400).json({ error: "Invalid or expired OTP." });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'System error.' });
   }
 });
 
@@ -187,7 +365,7 @@ function sendNotificationToClients(notification) {
 app.get('/api/jobs', async (req, res) => {
   try {
     const { title, location } = req.query;
-    let queryText = 'SELECT Jobs.*, Users.name as employer_name FROM Jobs LEFT JOIN Users ON Jobs.employer_id = Users.id WHERE 1=1';
+    let queryText = 'SELECT Jobs.*, Users.name as employer_name FROM Jobs LEFT JOIN Users ON Jobs.employer_id = Users.id WHERE (Jobs.end_date::timestamp >= NOW() OR Jobs.end_date IS NULL)';
     let params = [];
     if (title) { params.push(`%${title}%`); queryText += ` AND Jobs.title ILIKE $${params.length}`; }
     if (location) { params.push(`%${location}%`); queryText += ` AND Jobs.location ILIKE $${params.length}`; }
@@ -202,7 +380,7 @@ app.get('/api/jobs', async (req, res) => {
 // Profile Endpoints
 app.get('/api/users/profile', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, name, email, mobile_number, role, education, experience, avatar, about, skills, location, profile_progress FROM Users WHERE id = $1', [req.user.id]);
+    const result = await pool.query('SELECT id, name, email, mobile_number, role, education, experience, avatar, about, skills, location, dob, profile_progress FROM Users WHERE id = $1', [req.user.id]);
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
     } else {
@@ -214,22 +392,23 @@ app.get('/api/users/profile', authenticateToken, async (req, res) => {
 });
 
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
-  const { name, mobile_number, education, experience, about, skills, location, avatar } = req.body;
+  const { name, mobile_number, education, experience, about, skills, location, avatar, dob } = req.body;
   try {
     // Calculate simple profile progress automatically
     let progress = 30; // base for email/password/name
     if (mobile_number && mobile_number.length >= 10) progress += 10;
     if (education && education !== 'None') progress += 10;
-    if (experience > 0) progress += 10;
-    if (about && about.length > 10) progress += 10;
-    if (skills && skills.length > 3) progress += 15;
+    if (experience !== null && experience !== undefined && experience !== '') progress += 10;
+    if (about && about.length > 5) progress += 10;
+    if (skills && skills.length > 2) progress += 15;
     if (location && location.length > 2) progress += 10;
-    if (avatar && avatar.length > 5) progress += 5;
+    if (avatar && avatar.length > 5) progress += 10;
+    if (dob && dob.trim() !== '') progress += 5;
     progress = Math.min(progress, 100);
 
     const result = await pool.query(
-      `UPDATE Users SET name=$1, mobile_number=$2, education=$3, experience=$4, about=$5, skills=$6, location=$7, avatar=$8, profile_progress=$9 WHERE id=$10 RETURNING id, name, email, mobile_number, role, education, experience, avatar, about, skills, location, profile_progress`,
-      [name, mobile_number, education, experience, about, skills, location, avatar, progress, req.user.id]
+      `UPDATE Users SET name=$1, mobile_number=$2, education=$3, experience=$4, about=$5, skills=$6, location=$7, avatar=$8, dob=$9, profile_progress=$10 WHERE id=$11 RETURNING id, name, email, mobile_number, role, education, experience, avatar, about, skills, location, dob, profile_progress`,
+      [name, mobile_number, education, experience, about, skills, location, avatar, dob, progress, req.user.id]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -237,13 +416,108 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
   }
 });
 
+app.post('/api/users/destroy-request-otp', authenticateToken, async (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase();
+  try {
+    const existing = await pool.query('SELECT email FROM Users WHERE id = $1 AND LOWER(email) = $2', [req.user.id, identifier]);
+    if (existing.rows.length === 0) return res.status(400).json({ error: 'This is not a registered email, please enter a registered email.' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otps['destroy_' + identifier] = otp;
+    
+    const emailSent = await sendEmail({
+       to: identifier,
+       subject: `Account Destruction Warning OTP`,
+       text: `CRITICAL ALERT:\n\nYou have successfully requested to destroy your account.\n\nYour OTP to completely and permanently destroy your Hire-X account is: ${otp}\n\nDo not share this with anyone.`
+    });
+
+    if (!emailSent) {
+      delete otps['destroy_' + identifier];
+      return res.status(400).json({ error: 'This is not a registered email, please enter a registered email.' });
+    }
+
+    res.json({ message: "Destruction verification OTP sent successfully." });
+  } catch(err) {
+    res.status(500).json({ error: 'System error' });
+  }
+});
+
+app.post('/api/users/destroy-verify', authenticateToken, async (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase();
+  const { otp } = req.body;
+    if (otps['destroy_' + identifier] && otps['destroy_' + identifier] === otp) {
+      try {
+          const userId = req.user.id;
+          await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
+          await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
+          await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
+          await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
+          delete otps['destroy_' + identifier];
+          res.json({ message: "Account destroyed successfully." });
+      } catch(err) {
+        res.status(500).json({ error: 'System error during destruction' });
+    }
+  } else {
+    res.status(400).json({ error: "Invalid or expired OTP." });
+  }
+});
+
+// Unauthenticated destruction
+app.post('/api/auth/destroy-request-otp', async (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase();
+  try {
+    const existing = await pool.query('SELECT id FROM Users WHERE LOWER(email) = $1', [identifier]);
+    if (existing.rows.length === 0) return res.status(400).json({ error: 'This is not a registered email, please enter a registered email.' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otps['destroy_unauth_' + identifier] = otp;
+    
+    const emailSent = await sendEmail({
+       to: identifier,
+       subject: `Account Destruction OTP`,
+       text: `CRITICAL ALERT:\n\nYou have successfully requested to destroy your account.\n\nYour OTP to permanently destroy your Hire-X account is: ${otp}\n\nDo not share this with anyone.`
+    });
+
+    if (!emailSent) {
+       delete otps['destroy_unauth_' + identifier];
+       return res.status(400).json({ error: 'This is not a registered email, please enter a registered email.' });
+    }
+
+    res.json({ message: "Destruction verification OTP sent successfully." });
+  } catch(err) {
+    res.status(500).json({ error: 'System error' });
+  }
+});
+
+app.post('/api/auth/destroy-verify-unauth', async (req, res) => {
+  const identifier = req.body.identifier?.trim().toLowerCase();
+  const { otp } = req.body;
+  if (otps['destroy_unauth_' + identifier] && otps['destroy_unauth_' + identifier] === otp) {
+    try {
+        const userRes = await pool.query('SELECT id FROM Users WHERE LOWER(email) = $1', [identifier]);
+      if (userRes.rows.length > 0) {
+          const userId = userRes.rows[0].id;
+          await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
+          await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
+          await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
+          await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
+      }
+      delete otps['destroy_unauth_' + identifier];
+        res.json({ message: "Account successfully terminated" });
+    } catch(err) {
+        res.status(500).json({ error: 'System error during destruction' });
+    }
+  } else {
+    res.status(400).json({ error: "Invalid or expired OTP." });
+  }
+});
+
 app.post('/api/jobs', authenticateToken, async (req, res) => {
-  // Anyone can post a job now
-  const { title, qualification, description, education_level, years_experience, location } = req.body;
+  const { company_name, title, qualification, description, education_level, years_experience, location, company_logo, official_notification, end_date } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO Jobs (employer_id, title, qualification, description, education_level, years_experience, location) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [req.user.id, title, qualification, description, education_level, years_experience, location]
+      'INSERT INTO Jobs (employer_id, company_name, title, qualification, description, education_level, years_experience, location, company_logo, official_notification, end_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+      [req.user.id, company_name || 'Unknown Company', title, qualification, description, education_level, years_experience, location, company_logo || null, official_notification || null, end_date || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -251,36 +525,68 @@ app.post('/api/jobs', authenticateToken, async (req, res) => {
   }
 });
 
+app.delete('/api/jobs/:id', authenticateToken, async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const check = await pool.query('SELECT employer_id FROM Jobs WHERE id = $1', [jobId]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Job not found' });
+    if (check.rows[0].employer_id !== req.user.id && req.user.role !== 'main_admin' && req.user.role !== 'main_admin') {
+      return res.status(403).json({ error: 'Unauthorized to delete this job' });
+    }
+    
+    // Only delete strictly non-shortlisted applications to retain history. Or actually, just set them aside if we need permanence. Let's delete non-shortlisted only.
+    await pool.query("DELETE FROM Applications WHERE job_id = $1 AND status != 'Shortlisted'", [jobId]);
+    // For shortlisted, we could nullify job_id if we want to delete job, but job_id is cascading in DB if we didn't change it initially.
+    // So we'll just not delete the job if it has shortlisted apps? Or we delete job. The DB schema ON DELETE CASCADE will erase the app.
+    // Without direct DB alter, we can set status of job to 'Expired' instead of DELETE. "delete kotre delete aagutte"
+    // Let's actually execute an ALTER TABLE just in case on initDB to remove CASCADE.
+    // In this route we will just execute:
+    await pool.query('DELETE FROM Jobs WHERE id = $1', [jobId]);
+    res.json({ success: true, message: 'Job deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete job.' });
+  }
+});
+
 // --- Application Endpoints ---
 app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
-  const { cv_pdf_base64, job_description } = req.body;
+  const { cv_pdf_base64, job_description, profile_name } = req.body;
   try {
     // Integrate Gemini API for ATS scoring
     if (!process.env.GEMINI_API_KEY) {
-      return res.json({ ats_score: Math.floor(Math.random() * 40) + 60, analysis: "Demo Analysis: Great match but missing API key for real AI analysis.", suggested_roles: [] });
+      return res.json({ ats_score: Math.floor(Math.random() * 40) + 60, analysis: "Demo Analysis: Great match but missing API key.", suggested_roles: [], top_skills: ["Demo Skill 1", "Demo Skill 2"], experience_summary: "Demo Experience 2+ years" });
     }
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `You are an expert ATS (Applicant Tracking System). Analyze the provided CV Document against standard tech jobs (or the provided job description if any). Job Description: "${job_description || 'General Tech Role'}". 
-    Provide your output STRICTLY in JSON format with the following keys:
-    "ats_score": An integer from 0 to 100 representing the match score.
-    "analysis": A brief 1-2 sentence explanation of the score.
-    "suggested_roles": An array of 3 job titles that best fit this CV (e.g. ["React Developer", "UI Designer", "Frontend Engineer"]).
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig: { temperature: 0.4 } });
+    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Analyze the provided CV Document against standard tech jobs (or the provided job description if any). 
+    Job Description: "${job_description || 'General Tech Role'}". 
+    Candidate Profile Registration Name: "${profile_name || 'N/A'}".
+    Provide your output STRICTLY in JSON format with the following keys. ALL TEXT MUST BE IN ENGLISH:
+    "ats_score": An integer representing the true ATS score (0-100). Be highly realistic based ONLY on the core skills matching the required technical stack. Adjust the score meticulously so it dynamically reflects exactly what is in the resume. ONLY give 0 if the resume is blank or completely unrelated.
+    "analysis": A heavily detailed, robust, strictly factual and extremely huge paragraph (minimum 5 long sentences) evaluating the candidate's exact qualifications, tools, frameworks, and gaps relative to the role. Write exactly like a professional Technical Recruiter providing a thorough performance summary. Do not give short lines. Provide a huge, deep paragraph.
+    "suggested_roles": An array of 3 job titles that exactly fit this CV facts.
+    "top_skills": An array of top factual skills extracted from the CV.
+    "experience_summary": A short string summarizing the candidate's total years of experience or key roles facts.
+    "name_mismatch_alert": Check if the name inside the CV matches the 'Candidate Profile Registration Name'. If it clearly differs, output "True", otherwise "False".
     Do not include markdown tags like \`\`\`json, just output the raw JSON sequence.`;
     
-    const pdfPart = {
+    let mimeType = "application/pdf";
+    if (req.body.mimeType) {
+        mimeType = req.body.mimeType;
+    }
+    const documentPart = {
       inlineData: {
         data: cv_pdf_base64,
-        mimeType: "application/pdf"
+        mimeType: mimeType
       }
     };
 
-    const result = await model.generateContent([prompt, pdfPart]);
-    let output = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = await model.generateContent([prompt, documentPart]);
+      let output = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     const data = JSON.parse(output);
     res.json(data);
   } catch (err) {
-    console.error("AI CV Analysis Error:", err);
-    res.json({ ats_score: 75, analysis: "Fallback Analysis: Good profile based on standard metrics. Uploaded PDF parsed.", suggested_roles: ["Software Engineer", "Developer", "Analyst"] });
+    console.error("CV Analysis Error:", err);
+    res.json({ ats_score: 75, analysis: "Fallback Analysis: Good profile based on standard metrics. Uploaded Document parsed.", suggested_roles: ["Software Engineer", "Developer", "Analyst"], top_skills: ["HTML", "CSS", "Problem Solving"], experience_summary: "Adequate experience identified." });
   }
 });
 
@@ -293,20 +599,84 @@ app.post('/api/applications', authenticateToken, async (req, res) => {
     if (existing.rows.length > 0) return res.status(400).json({ error: 'You have already applied for this role.' });
 
     // Insert
+    const jobRes = await pool.query('SELECT employer_id, title, company_name, company_logo FROM Jobs WHERE id=$1', [job_id]);
+    if (jobRes.rows.length === 0) return res.status(404).json({ error: 'Job not found' });
+    const employerId = jobRes.rows[0].employer_id;
+    const jobTitle = jobRes.rows[0].title;
+    const appliedCompany = jobRes.rows[0].company_name || 'the Company';
+    const companyLogo = jobRes.rows[0].company_logo || null;
+
     const result = await pool.query(
-      'INSERT INTO Applications (job_id, user_id, cv_url, ats_score, cv_analysis) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [job_id, req.user.id, cv_url, ats_score || 0, cv_analysis || '']
+      'INSERT INTO Applications (job_id, user_id, employer_id, cv_url, ats_score, cv_analysis) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [job_id, req.user.id, employerId, cv_url, ats_score || 0, cv_analysis || '']
     );
 
-    // Notify Employer
-    const jobRes = await pool.query('SELECT employer_id, title FROM Jobs WHERE id=$1', [job_id]);
-    if (jobRes.rows.length > 0) {
+    // Notify Employer and send automated emails
+      
       sendNotificationToClients({
         type: 'NEW_APPLICATION',
-        user_id: jobRes.rows[0].employer_id,
-        message: `New global applicant for: ${jobRes.rows[0].title} with ATS Score: ${ats_score}`
+        user_id: employerId,
+        message: `New global applicant for: ${jobTitle} with ATS Score: ${ats_score}`
       });
-    }
+
+      const now = new Date();
+      const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+      const dd = String(istTime.getUTCDate()).padStart(2, '0');
+      const mm = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+      const yyyy = istTime.getUTCFullYear();
+      const submitDateStr = `${dd}-${mm}-${yyyy}`;
+      let hours = istTime.getUTCHours();
+      const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; 
+      const submitTimeStr = `${hours}:${minutes} ${ampm}`;
+
+      // Send Real Email to Applicant
+      const applicantRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [req.user.id]);
+      if (applicantRes.rows.length > 0) {
+         await sendEmail({
+             to: applicantRes.rows[0].email,
+             subject: `Application Submitted: ${jobTitle}`,
+             text: `Hello ${applicantRes.rows[0].name},
+
+Congratulations! You have successfully submitted your application to ${appliedCompany} for the job role: ${jobTitle}.
+
+Next Process (Submission Details):
+Date: ${submitDateStr}
+Time: ${submitTimeStr}
+Mode: Online Evaluation
+Location: ${appliedCompany} (ATS System)
+
+Please prepare well and wait for the employer to review your profile. All the best!
+
+Warm Regards,
+Hire-X Global Network`
+         });
+      }
+
+      // Send Real Email to Employer
+      const empRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [employerId]);
+      if (empRes.rows.length > 0) {
+         await sendEmail({
+             to: empRes.rows[0].email,
+             subject: `New Application Received: ${jobTitle}`,
+             text: `Hello ${empRes.rows[0].name},
+
+Congratulations! You have successfully received a new application for the job role: ${jobTitle}.
+
+Next Process (Applicant Details):
+Date: ${submitDateStr}
+Time: ${submitTimeStr}
+Mode: Name - ${applicantRes.rows.length > 0 ? applicantRes.rows[0].name : "A new candidate"}
+Location: Match Score - ${ats_score}%
+
+Please log in to your Hire-X dashboard to review the full details and CV. All the best!
+
+Warm Regards,
+Hire-X Global Network`
+         });
+      }
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -315,18 +685,62 @@ app.post('/api/applications', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/api/feedbacks', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Feedbacks ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch feedbacks' });
+  }
+});
+
+app.post('/api/feedbacks', authenticateToken, async (req, res) => {
+  const { text } = req.body;
+  try {
+    const userRes = await pool.query('SELECT name, role, avatar FROM Users WHERE id=$1', [req.user.id]);
+    if (userRes.rows.length > 0) {
+      const user = userRes.rows[0];
+      const result = await pool.query(
+        'INSERT INTO Feedbacks (name, role, text, avatar, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [user.name, user.role || 'Member', text, user.avatar || '', req.user.id]
+      );
+      res.json({ success: true, feedback: result.rows[0] });
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to submit feedback' });
+  }
+});
+
+app.delete('/api/feedbacks/:id', authenticateToken, async (req, res) => {
+  try {
+    const feedbackId = req.params.id;
+    const check = await pool.query('SELECT user_id FROM Feedbacks WHERE id = $1', [feedbackId]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Feedback not found' });
+    if (check.rows[0].user_id !== req.user.id && req.user.role !== 'main_admin' && req.user.role !== 'main_admin') {
+      return res.status(403).json({ error: 'Unauthorized to delete this feedback' });
+    }
+    
+    await pool.query('DELETE FROM Feedbacks WHERE id = $1', [feedbackId]);
+    res.json({ success: true, message: 'Feedback deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete feedback' });
+  }
+});
+
 app.get('/api/applications', authenticateToken, async (req, res) => {
   // Anyone can view their applicants or jobs
   try {
     let query = `
-      SELECT a.id, a.status, a.ats_score, a.cv_analysis, a.cv_url, j.title as role, u.name as applicant_name, u.email, u.mobile_number, u.education, u.experience, u.id as user_id 
+      SELECT a.id, a.status, a.ats_score, a.cv_analysis, a.cv_url, COALESCE(j.title, 'Deleted Role') as role, a.job_id, u.name as applicant_name, u.email, u.mobile_number, u.education, u.experience, u.id as user_id, u.skills, u.location, u.about
       FROM Applications a
-      JOIN Jobs j ON a.job_id = j.id
-      JOIN Users u ON a.user_id = u.id
+      LEFT JOIN Jobs j ON a.job_id = j.id
+      LEFT JOIN Users u ON a.user_id = u.id
     `;
     let params = [];
-    if (req.user.role === 'employer' || true) { // Removing role constraint to show anyone their posted job's applicants
-      query += ` WHERE j.employer_id = $1`;
+    if (req.user.role === 'employer' || true) { 
+      query += ` WHERE a.employer_id = $1 OR j.employer_id = $1`;
       params.push(req.user.id);
     }
     query += ` ORDER BY a.id DESC`;
@@ -335,14 +749,20 @@ app.get('/api/applications', authenticateToken, async (req, res) => {
     
     // Also fetch jobs they applied to
     const appliedQuery = `
-      SELECT a.id, a.status, a.ats_score, a.cv_analysis, j.title as role, j.location as location
+      SELECT a.id, a.status, a.ats_score, a.cv_analysis, j.title as role, j.company_name, j.location as location, j.description, j.education_level, j.qualification, j.years_experience, j.end_date, j.company_logo, j.official_notification
       FROM Applications a
       JOIN Jobs j ON a.job_id = j.id
       WHERE a.user_id = $1 ORDER BY a.id DESC
     `;
     const appliedResult = await pool.query(appliedQuery, [req.user.id]);
 
-    res.json({ received: result.rows, applied: appliedResult.rows });
+    // Also fetch jobs they posted
+    const postedQuery = `
+      SELECT * FROM Jobs WHERE employer_id = $1 ORDER BY id DESC
+    `;
+    const postedResult = await pool.query(postedQuery, [req.user.id]);
+
+    res.json({ received: result.rows, applied: appliedResult.rows, posted: postedResult.rows });
   } catch (err) {
     res.status(500).json({ error: 'Data retrieval error' });
   }
@@ -351,7 +771,7 @@ app.get('/api/applications', authenticateToken, async (req, res) => {
 app.post('/api/applications/:id/status', authenticateToken, async (req, res) => {
   try {
     const appId = req.params.id;
-    const { status } = req.body;
+    const { status, interviewDate, interviewTime, interviewMode, interviewLocation } = req.body;
     const update = await pool.query('UPDATE Applications SET status = $1 WHERE id = $2 RETURNING *', [status, appId]);
     if (update.rows.length > 0) {
       const appRecord = update.rows[0];
@@ -365,31 +785,93 @@ app.post('/api/applications/:id/status', authenticateToken, async (req, res) => 
 
       // Simulation of Emails and SMS
       const userRes = await pool.query('SELECT name, email, mobile_number FROM Users WHERE id=$1', [appRecord.user_id]);
-      const jobRes = await pool.query('SELECT title FROM Jobs WHERE id=$1', [appRecord.job_id]);
+      const jobRes = await pool.query('SELECT title, employer_id FROM Jobs WHERE id=$1', [appRecord.job_id]);
       
       const userName = userRes.rows[0]?.name || 'Applicant';
       const userEmail = userRes.rows[0]?.email || 'no-reply@hire-x.com';
-      const userMobile = userRes.rows[0]?.mobile_number || '0000000000';
       const jobTitle = jobRes.rows[0]?.title || 'Position';
+      
+      let emailMsg = `Hello ${userName},
+
+Your application status for the role of ${jobTitle} has been updated to: ${status}.
+
+Please log in to your Hire-X portal to view more details.
+
+Best Regards,
+Hire-X Team`;
 
       if (status === 'Shortlisted') {
-        const emailMsg = `Congratulations ${userName}! Your application for ${jobTitle} has been Shortlisted.`;
-        console.log(`[NODEMAILER LOG] Sending Email to: ${userEmail} | Content: ${emailMsg}`);
-        sendSMS(userMobile, emailMsg);
+        const empNameQuery = await pool.query('SELECT email, name FROM Users WHERE id=$1', [jobRes.rows[0]?.employer_id]);
+        const jobCompanyRes = await pool.query('SELECT company_name FROM Jobs WHERE id=$1', [appRecord.job_id]);
+        const companyName = jobCompanyRes.rows.length > 0 && jobCompanyRes.rows[0].company_name ? jobCompanyRes.rows[0].company_name : (empNameQuery.rows.length > 0 ? empNameQuery.rows[0].name : 'the Company');
         
-        try {
-          if(process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-             await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: userEmail,
-                subject: `Application Shortlisted for ${jobTitle}`,
-                text: emailMsg
-             });
-          }
-        } catch (mailErr) {
-            console.error("Nodemailer failed (mocking success):", mailErr.message);
+        let formattedDate = 'TBD';
+        if (interviewDate) {
+           const [yyyy, mm, dd] = interviewDate.split('-');
+           const dateObj = new Date(interviewDate);
+           const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+           formattedDate = `${dd}-${mm}-${yyyy}, ${dayName}`;
         }
+
+        emailMsg = `Hello ${userName},
+
+Congratulations! You have been successfully shortlisted by ${companyName} for the job role: ${jobTitle}.
+
+Next Process (Interview Details):
+Date: ${formattedDate}
+Time: ${interviewTime || 'TBD'}
+Mode: ${interviewMode || 'Online'}
+Location: ${interviewLocation || 'N/A'}
+
+Please prepare well and attend the interview on time. All the best!
+
+Warm Regards,
+Hire-X Global Network`;
+        
+        if (empNameQuery.rows.length > 0) {
+           await sendEmail({
+              to: empNameQuery.rows[0].email,
+              subject: `Candidate Shortlisted: ${jobTitle}`,
+              text: `Hello ${empNameQuery.rows[0].name},
+
+You have successfully shortlisted "${userName}" for the role of ${jobTitle}. The candidate has been formally notified about the interview schedule:
+
+Date: ${formattedDate}
+Time: ${interviewTime}
+Mode: ${interviewMode}
+Location: ${interviewLocation || 'N/A'}
+
+Friendly reminder to be prepared for the interview at the allocated time.
+
+Best regards,
+Hire-X Team`
+           });
+        }
+
+        // Notify Admin as requested
+        await sendEmail({
+           to: 'admin@hire-x.com',
+           subject: `Admin Alert: Candidate Shortlisted: ${jobTitle}`,
+           text: `Hello Admin,
+
+Aspirant "${userName}" was just shortlisted for "${jobTitle}".
+
+Employer scheduled interview on:
+Date: ${formattedDate}
+Time: ${interviewTime}
+Mode: ${interviewMode}
+Location: ${interviewLocation || 'N/A'}
+
+System Auto-Generated.`
+        });
       }
+
+      // Send Real Email to Applicant
+      await sendEmail({
+         to: userEmail,
+         subject: `Application Update: ${jobTitle} - ${status}`,
+         text: emailMsg
+      });
 
       res.json({ success: true, app: appRecord });
     } else {
@@ -407,14 +889,13 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
   const { message, history } = req.body;
   if (!process.env.GEMINI_API_KEY) {
     return res.json({
-      text: "ಇದೊಂದು ಡೆಮೊ ರಿಸ್ಪಾನ್ಸ್. ಅಸಲಿ AI ಆಗಿ ಕೆಲಸ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ '.env' ಫೈಲ್‌ನಲ್ಲಿ 'GEMINI_API_KEY' ಸೇರಿಸಿ. (This is a demo response. Please add 'GEMINI_API_KEY' to your .env file to enable real AI)."
+      text: "ಇದೊಂದು ಡೆಮೊ ರಿಸ್ಪಾನ್ಸ್. ಅಸಲಿ Assistant ಆಗಿ ಕೆಲಸ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ '.env' ಫೈಲ್‌ನಲ್ಲಿ 'GEMINI_API_KEY' ಸೇರಿಸಿ. (This is a demo response. Please add 'GEMINI_API_KEY' to your .env file to enable real Assistant features)."
     });
   }
 
   try {
     const model = genAI.getGenerativeModel(
-      { model: "gemini-pro" },
-      { apiVersion: "v1" }
+      { model: "gemini-2.5-flash" }
     );
 
     const formattedHistory = history.map(msg => ({
@@ -426,7 +907,7 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
       history: formattedHistory,
       systemInstruction: {
         role: "system",
-        parts: [{ text: "You are Hire-IQ ✨, an advanced, global AI assistant by Hire-X. You are as capable as ChatGPT or Gemini. You MUST answer ANY question the user asks, on ANY topic (coding, science, general knowledge, career, etc). You MUST understand, speak, and translate ALL languages fluently. If a user speaks Kannada, reply in Kannada. If Spanish, reply in Spanish. Be highly intelligent, very professional, incredibly helpful, and format answers beautifully." }]
+        parts: [{ text: "You are Hire-IQ ✨, an advanced conversational Assistant by Hire-X. You must answer ANY user queries, whether science, coding, history, or casual talk, exactly like a generic highly-intelligent Assistant. DO NOT bring up jobs or Hire-X randomly unless explicitly asked by the user.\n\nCRITICAL DIRECTIVES:\n1. Only respond with what is asked. If they say hi, respond normally.\n2. You are practically omniscient. Answer all general knowledge.\n3. MASTER OF LANGUAGES & SCRIPTS: If the user speaks Kannada using English letters (e.g., 'en madta idiya'), YOU MUST reply in proper Kannada script (e.g., 'ನಾನು ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ'). If the user speaks English using Kannada letters (e.g., 'ಹೌ ಆರ್ ಯು'), YOU MUST reply in proper English script (e.g., 'I am fine, and you?'). Always respond in the native standard script of the underlying language the user intended to speak!\n4. ONLY if the user explicitly asks for jobs, present jobs from the context. If they ask for 'developer jobs', ONLY show matching developer jobs.\n5. When you list a job, include the direct link exactly formatted like this: [Apply for {Job Title} here](/jobs?title={Job Title})." }]
       }
     });
 
@@ -439,7 +920,293 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
   }
 });
 
-const path = require('path');
+// --- Suggestion Box Endpoint ---
+app.post('/api/suggestions', authenticateToken, async (req, res) => {
+  const { text } = req.body;
+  try {
+    const userRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [req.user.id]);
+    if (userRes.rows.length > 0) {
+      const user = userRes.rows[0];
+      
+      await pool.query('INSERT INTO Suggestions (user_id, name, email, text) VALUES ($1, $2, $3, $4)', [req.user.id, user.name, user.email, text]);
+      
+      const adminQ = await pool.query("SELECT email FROM Users WHERE role = 'main_admin'");
+      const adminEmail = adminQ.rows.length > 0 ? adminQ.rows[0].email : 'kmthecoder@gmail.com';
+      await sendEmail({
+         to: adminEmail,
+         subject: `New Suggestion from Hire-X Global Network`,
+         text: `Hello Main Admin,\n\nYou have received a new suggestion from a user on the Hire-X platform.\n\nUser Details:\nName: ${user.name}\nEmail: ${user.email}\n\nSuggestion/Complaint:\n"${text}"\n\nPlease take the necessary actions according to Hire-X Global Network guidelines.\n\nWarm Regards,\nHire-X System Automations`,
+         fromName: user.name
+      });
+
+      res.json({ success: true, message: 'Suggestion sent to Main Admin successfully.' });
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to submit suggestion' });
+  }
+});
+
+app.get('/api/suggestions', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const result = await pool.query('SELECT * FROM Suggestions ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch suggestions' });
+  }
+});
+
+app.delete('/api/suggestions/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    await pool.query('DELETE FROM Suggestions WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Suggestion deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete suggestion' });
+  }
+});
+
+app.post('/api/suggestions/:id/reply', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const { replyText } = req.body;
+  try {
+    const sug = await pool.query('SELECT name, email, text FROM Suggestions WHERE id = $1', [req.params.id]);
+    if(sug.rows.length === 0) return res.status(404).json({ error: 'Suggestion not found' });
+    
+    await sendEmail({
+      to: sug.rows[0].email,
+      subject: `Reply to your Suggestion on Hire-X`,
+      text: `Hello ${sug.rows[0].name},\n\n${replyText}\n\nWarm Regards,\nHire-X Team`,
+      fromName: 'Hire-X Global Network'
+    });
+    
+    res.json({ success: true, message: 'Reply sent successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to send reply' });
+  }
+});
+
+// --- Contact Details Endpoint ---
+app.get('/api/contact', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT email, mobile_number, location FROM Users WHERE role = 'main_admin'");
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.json({ email: 'admin@hire-x.com', mobile_number: 'Not Specified', location: 'Not Specified' });
+    }
+  } catch (err) {
+    res.json({ email: 'admin@hire-x.com', mobile_number: 'Not Specified', location: 'Not Specified' });
+  }
+});
+
+// --- Articles Endpoints ---
+app.get('/api/articles', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Articles ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch articles' });
+  }
+});
+
+app.post('/api/articles', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin' && req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const { title, category, description, content, read_time, image_url } = req.body;
+  if(!title || !category || !description || !content || !image_url) return res.status(400).json({ error: 'All fields are mandatory, including background image.' });
+  try {
+    const result = await pool.query(
+      'INSERT INTO Articles (title, category, description, content, read_time, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [title, category, description, content, read_time || '5 min read', image_url]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create article' });
+  }
+});
+
+app.put('/api/articles/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin' && req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const articleId = req.params.id;
+  const { title, category, description, content, read_time, image_url } = req.body;
+  if(!title || !category || !description || !content || !image_url) return res.status(400).json({ error: 'All fields are mandatory, including background image.' });
+  try {
+    const result = await pool.query(
+      'UPDATE Articles SET title=$1, category=$2, description=$3, content=$4, read_time=$5, image_url=$6 WHERE id=$7 RETURNING *',
+      [title, category, description, content, read_time, image_url, articleId]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update article' });
+  }
+});
+
+app.delete('/api/articles/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin' && req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    await pool.query('DELETE FROM Articles WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Article deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete article' });
+  }
+});
+
+// --- Admin Endpoints ---
+app.get('/api/admin/users', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const result = await pool.query('SELECT id, name, email, mobile_number, role, education, experience, avatar, about, skills, location, dob, profile_progress FROM Users ORDER BY name ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.get('/api/admin/users/:id/details', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const userId = req.params.id;
+    const userRes = await pool.query('SELECT * FROM Users WHERE id = $1', [userId]);
+    const jobs = await pool.query('SELECT * FROM Jobs WHERE employer_id = $1', [userId]);
+    const applied = await pool.query('SELECT a.*, j.title, j.company_name FROM Applications a JOIN Jobs j ON a.job_id = j.id WHERE a.user_id = $1', [userId]);
+    const feedbacks = await pool.query('SELECT * FROM Feedbacks WHERE user_id = $1', [userId]);
+    res.json({
+      user: userRes.rows[0],
+      postedJobs: jobs.rows,
+      appliedJobs: applied.rows,
+      feedbacks: feedbacks.rows
+    });
+  } catch(err) {
+    res.status(500).json({error: 'Failed to fetch user details'});
+  }
+});
+
+app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const userId = req.params.id;
+    await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
+    await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
+    await pool.query('DELETE FROM Feedbacks WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM Suggestions WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
+    res.json({ success: true, message: 'User and all associated data deleted completely.' });
+  } catch(err) {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+app.delete('/api/admin/applications/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    await pool.query('DELETE FROM Applications WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Application deleted successfully' });
+  } catch(err) {
+    res.status(500).json({ error: 'Failed to delete application' });
+  }
+});
+
+app.get('/api/admin/jobs', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const result = await pool.query('SELECT Jobs.*, Users.name as employer_name FROM Jobs LEFT JOIN Users ON Jobs.employer_id = Users.id ORDER BY company_name ASC');
+    res.json(result.rows);
+  } catch(err) {
+    res.status(500).json({ error: 'Failed to fetch all jobs' });
+  }
+});
+
+// Admin Credential Change Endpoints
+app.post('/api/auth/admin-change-req-otp', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otps['admin_change_' + req.user.email] = otp;
+    const emailSent = await sendEmail({
+       to: req.user.email,
+       subject: `Admin Credential Change Request OTP`,
+       text: `Hello Main Admin,\n\nYour OTP to initiate credential change is: ${otp}\n\nDo not share this with anyone.`,
+       fromName: 'Hire-X Global Network'
+    });
+    if (!emailSent) return res.status(400).json({ error: 'Failed to send email.' });
+    res.json({ message: "OTP sent to current email." });
+  } catch(err) {
+    res.status(500).json({ error: 'System error' });
+  }
+});
+
+app.post('/api/auth/admin-verify-req-otp', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const { otp } = req.body;
+  if (otps['admin_change_' + req.user.email] && otps['admin_change_' + req.user.email] === otp) {
+    delete otps['admin_change_' + req.user.email];
+    res.json({ success: true, message: "Verified successfully" });
+  } else {
+    res.status(400).json({ error: "Invalid OTP" });
+  }
+});
+
+app.post('/api/auth/admin-new-email-otp', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const { newEmail } = req.body;
+  try {
+    const emailValidation = await emailValidator.validate(newEmail);
+    if (!emailValidation.valid) return res.status(400).json({ error: 'Invalid email format or domain' });
+
+    const existing = await pool.query('SELECT id FROM Users WHERE email = $1', [newEmail]);
+    if (existing.rows.length > 0 && newEmail !== req.user.email) return res.status(400).json({ error: 'Email already exists' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otps['admin_new_email_' + newEmail] = otp;
+    const emailSent = await sendEmail({
+       to: newEmail,
+       subject: `Verify New Admin Email`,
+       text: `Hello Main Admin,\n\nYour OTP to verify your new email is: ${otp}\n\nDo not share this with anyone.`,
+       fromName: 'Hire-X Global Network'
+    });
+    if (!emailSent) return res.status(400).json({ error: 'Failed to send email.' });
+    res.json({ message: "OTP sent to new email." });
+  } catch(err) {
+    res.status(500).json({ error: 'System error' });
+  }
+});
+
+app.post('/api/auth/admin-verify-new-email-otp', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const { newEmail, otp } = req.body;
+  if (otps['admin_new_email_' + newEmail] && otps['admin_new_email_' + newEmail] === otp) {
+    delete otps['admin_new_email_' + newEmail];
+    res.json({ success: true, message: "Verified successfully" });
+  } else {
+    res.status(400).json({ error: "Invalid OTP" });
+  }
+});
+
+app.post('/api/auth/admin-update-credentials', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
+  const { newEmail, newPassword, otp } = req.body;
+  
+  if (!otps['admin_new_email_' + newEmail] || otps['admin_new_email_' + newEmail] !== otp) {
+    return res.status(400).json({ error: "Invalid OTP" });
+  }
+  delete otps['admin_new_email_' + newEmail];
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await pool.query(
+      'UPDATE Users SET email = $1, password = $2, name = $3, mobile_number = $4, location = $5, avatar = $6, profile_progress = 30 WHERE id = $7', 
+      [newEmail, hashedPassword, 'New Admin', '', '', '', req.user.id]
+    );
+    res.json({ success: true, message: "Credentials successfully modified." });
+  } catch(err) {
+    res.status(500).json({ error: 'System error' });
+  }
+});
+
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // Fallback to index.html for React Router

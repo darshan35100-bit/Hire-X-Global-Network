@@ -18,7 +18,7 @@ export const NotificationProvider = ({ children }) => {
     <NotificationContext.Provider value={{ addNotification }}>
       {children}
       {/* Global Toast Container */}
-      <div className="fixed top-28 right-6 z-[9999] space-y-3 pointer-events-none flex flex-col items-end">
+      <div className="fixed top-28 right-4 md:right-6 z-[9999] space-y-3 pointer-events-none flex flex-col items-end">
         <AnimatePresence>
           {notifications.map((notif) => (
             <motion.div 
@@ -26,7 +26,7 @@ export const NotificationProvider = ({ children }) => {
               initial={{ x: 100, opacity: 0, scale: 0.9 }} 
               animate={{ x: 0, opacity: 1, scale: 1 }} 
               exit={{ opacity: 0, x: 20, scale: 0.9 }}
-              className="pointer-events-auto bg-white/80 backdrop-blur-2xl border border-white/60 text-[#113253] pl-6 pr-8 py-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] flex items-center gap-4 relative overflow-hidden min-w-[320px]"
+              className="pointer-events-auto bg-white/80 backdrop-blur-2xl border border-white/60 text-[#113253] pl-6 pr-8 py-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] flex items-center gap-4 relative overflow-hidden w-[calc(100vw-32px)] md:w-auto md:min-w-[320px]"
             >
               <div className={`w-2 h-full absolute left-0 top-0 bg-gradient-to-b ${notif.type === 'error' ? 'from-red-500 to-pink-500' : 'from-[#489895] to-[#806bf8]'}`}></div>
               <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-inner ${notif.type === 'error' ? 'bg-red-50 text-red-500' : 'bg-[#e8f1f2] text-[#4facfe]'}`}>

@@ -11,7 +11,7 @@ import { AuthContext } from './context/AuthContext';
 import Profile from './components/Profile';
 import { NotificationContext } from './context/NotificationContext';
 import HireIQ from './components/HireIQ';
-import logoImg from './assets/logo.jpeg';
+import logoImg from './assets/Logo.jpeg';
 
 function GlobalNotificationListener() {
   const auth = useContext(AuthContext);

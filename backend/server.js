@@ -107,7 +107,7 @@ async function initDB() {
       
       -- Seed Mock Users and Jobs
       INSERT INTO Users (name, email, password, role, profile_progress, mobile_number, about, location) VALUES 
-      ('Hire-X Global Network', 'kmthecoder@gmail.com', '$2b$10$5Tf5iB1.zwUJNkEfX11CE.ksmKLfbIR28BaI0pi44TbwigC9R8vWC', 'main_admin', 100, '0000000000', 'Main Administrator Account for Hire-X Global Network.', 'Global')
+      ('Hire-X Global Network', 'darshankm35100@gmail.com', '$2b$10$5Tf5iB1.zwUJNkEfX11CE.ksmKLfbIR28BaI0pi44TbwigC9R8vWC', 'main_admin', 100, '0000000000', 'Main Administrator Account for Hire-X Global Network.', 'Global')
       ON CONFLICT (email) DO NOTHING;
     `);
 
@@ -931,7 +931,7 @@ app.post('/api/suggestions', authenticateToken, async (req, res) => {
       await pool.query('INSERT INTO Suggestions (user_id, name, email, text) VALUES ($1, $2, $3, $4)', [req.user.id, user.name, user.email, text]);
       
       const adminQ = await pool.query("SELECT email FROM Users WHERE role = 'main_admin'");
-      const adminEmail = adminQ.rows.length > 0 ? adminQ.rows[0].email : 'kmthecoder@gmail.com';
+      const adminEmail = adminQ.rows.length > 0 ? adminQ.rows[0].email : 'darshankm35100@gmail.com';
       await sendEmail({
          to: adminEmail,
          subject: `New Suggestion from Hire-X Global Network`,

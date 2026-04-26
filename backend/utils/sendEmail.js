@@ -1,7 +1,25 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const sendEmail = async ({ to, subject, text, fromName }) => {
   try {
+    // If Resend API Key is provided, use Resend for higher limits
+    if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const { data, error } = await resend.emails.send({
+        from: `${fromName || 'Hire-X Global Network'} <hello@hirexglobalnetwork.com>`, // Replace with your verified domain in Resend
+        to: [to],
+        subject: subject,
+        text: text,
+      });
+      if (error) {
+        console.error("Resend Email failed:", error);
+        return false;
+      }
+      return true;
+    }
+
+    // Fallback to Nodemailer (Gmail) totally free automation
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {

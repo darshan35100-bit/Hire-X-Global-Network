@@ -13,7 +13,7 @@ const Footer = () => {
   const [isSuggesting, setIsSuggesting] = useState(false);
   
   const [contactInfo, setContactInfo] = useState({
-    email: 'kmthecoder@gmail.com',
+    email: 'darshankm35100@gmail.com',
     mobile_number: '+91 98765 43210',
     location: 'Bengaluru, Karnataka 560001'
   });

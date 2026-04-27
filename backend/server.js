@@ -155,17 +155,9 @@ app.post('/api/auth/send-verify-otp', async (req, res) => {
     const existing = await pool.query(`SELECT id FROM Users WHERE email = $1`, [identifier]);
     if (existing.rows.length > 0) return res.status(400).json({ error: 'Account already registered, please try with another account or log in.' });
 
-    // Deep Email Existence Check
-    const emailValidation = await emailValidator.validate(identifier);
-    if (!emailValidation.valid) {
-      // If the email is completely invalid or doesn't exist mathematically/SMTP, block it immediately
-      return res.status(400).json({ error: 'Invalid email, please enter a valid email' });
-    }
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otps['verify_' + identifier] = otp;
     
-    // emailExists condition is satisfied by deep validation above
     const emailSent = await sendEmail({
        to: identifier,
        subject: `Hire-X Global Network Verification OTP`,
@@ -174,7 +166,7 @@ app.post('/api/auth/send-verify-otp', async (req, res) => {
 
     if (!emailSent) {
       delete otps['verify_' + identifier];
-      return res.status(400).json({ error: 'Invalid email, please enter a valid email' });
+      return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
     }
 
     res.json({ message: "Email OTP sent successfully." });
@@ -290,7 +282,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       
       if (!emailSent) {
          delete otps[identifier];
-         return res.status(400).json({ error: 'invalid email,please enter valid email.' });
+         return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
       }
 
       res.json({ message: "OTP sent to your Registered Email." });
@@ -433,7 +425,7 @@ app.post('/api/users/destroy-request-otp', authenticateToken, async (req, res) =
 
     if (!emailSent) {
       delete otps['destroy_' + identifier];
-      return res.status(400).json({ error: 'This is not a registered email, please enter a registered email.' });
+      return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
     }
 
     res.json({ message: "Destruction verification OTP sent successfully." });
@@ -480,7 +472,7 @@ app.post('/api/auth/destroy-request-otp', async (req, res) => {
 
     if (!emailSent) {
        delete otps['destroy_unauth_' + identifier];
-       return res.status(400).json({ error: 'This is not a registered email, please enter a registered email.' });
+       return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
     }
 
     res.json({ message: "Destruction verification OTP sent successfully." });

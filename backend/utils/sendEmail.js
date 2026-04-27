@@ -6,16 +6,22 @@ const sendEmail = async ({ to, subject, text, fromName }) => {
     // If Resend API Key is provided, use Resend for higher limits
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+      console.log(`Attempting to send email via Resend to ${to} from ${fromEmail}`);
+
       const { data, error } = await resend.emails.send({
-        from: `${fromName || 'Hire-X Global Network'} <hello@hirexglobalnetwork.com>`, // Replace with your verified domain in Resend
+        from: `${fromName || 'Hire-X Global Network'} <${fromEmail}>`, 
         to: [to],
         subject: subject,
         text: text,
       });
       if (error) {
-        console.error("Resend Email failed:", error);
+        console.error("Resend Email failed:", error.message || error);
+        // Fallback to Nodemailer if resend fails (if we want to)
         return false;
       }
+      console.log("Email sent successfully via Resend:", data);
       return true;
     }
 

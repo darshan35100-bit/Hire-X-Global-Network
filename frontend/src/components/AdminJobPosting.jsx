@@ -34,7 +34,7 @@ const AdminJobPosting = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access Post a Job.' } });
+      navigate('/login', { state: { blink: true, blinkId: Date.now(), redirectMessage: 'Please Login or Register to access Post a Job.' } });
     }
   }, [user, navigate]);
 
@@ -221,8 +221,8 @@ const AdminJobPosting = () => {
                   <input type="file" accept=".pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert("File size exceeds 2MB limit. Please upload a smaller PDF.");
+                      if (file.size > 20 * 1024 * 1024) {
+                        alert("File size exceeds 20MB limit. Please upload a smaller PDF.");
                         e.target.value = '';
                         return;
                       }

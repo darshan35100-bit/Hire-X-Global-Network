@@ -74,7 +74,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access your Profile.' } });
+      navigate('/login', { state: { blink: true, blinkId: Date.now(), redirectMessage: 'Please Login or Register to access your Profile.' } });
       return;
     }
     fetchProfile();
@@ -746,8 +746,13 @@ const Profile = () => {
                                         </div>
                                       )}
                                       {job.official_notification && (
-                                        <div>
-                                          <a href={job.official_notification} download="notification" className="inline-block bg-[#113253] hover:bg-[#25619c] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm uppercase tracking-widest">Download Official Notification</a>
+                                        <div className="flex gap-2 items-center">
+                                          <button onClick={() => setViewCvModal(job.official_notification)} className="bg-[#489895] hover:bg-[#387f7c] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm uppercase tracking-widest">
+                                            View Notification
+                                          </button>
+                                          <a href={job.official_notification} download="notification" className="bg-[#113253] hover:bg-[#25619c] text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm uppercase tracking-widest">
+                                            Download
+                                          </a>
                                         </div>
                                       )}
                                     </div>

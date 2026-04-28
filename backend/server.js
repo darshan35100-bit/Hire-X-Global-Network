@@ -550,16 +550,22 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     }
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { temperature: 0.4 } });
-    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Analyze the provided CV Document against standard tech jobs (or the provided job description if any). 
+    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Analyze the provided PDF Document against standard tech jobs (or the provided job description if any). 
     Job Description: "${job_description || 'General Tech Role'}". 
-    Candidate Profile Registration Name: "${profile_name || 'N/A'}".
+    Candidate Profile Registration Name/Details: "${profile_name || 'N/A'}".
+    
+    FIRST, DETERMINE IF THIS DOCUMENT IS A REAL CV/RESUME. If it is just a random PDF, a dummy file, an image, or anything that is clearly NOT a CV/Resume, you MUST set "is_valid_cv" to false, "ats_score" to 0, and explain in "analysis" that the document is not a valid CV.
+    
+    If it IS a valid CV, evaluate it strictly and realistically.
+    
     Provide your output STRICTLY in JSON format with the following keys. ALL TEXT MUST BE IN ENGLISH:
-    "ats_score": An integer representing the true ATS score (0-100). Be highly realistic based ONLY on the core skills matching the required technical stack. Adjust the score meticulously so it dynamically reflects exactly what is in the resume. ONLY give 0 if the resume is blank or completely unrelated.
-    "analysis": A heavily detailed, robust, strictly factual and extremely huge paragraph (minimum 5 long sentences) evaluating the candidate's exact qualifications, tools, frameworks, and gaps relative to the role. Write exactly like a professional Technical Recruiter providing a thorough performance summary. Do not give short lines. Provide a huge, deep paragraph.
-    "suggested_roles": An array of 3 job titles that exactly fit this CV facts.
-    "top_skills": An array of top factual skills extracted from the CV.
-    "experience_summary": A short string summarizing the candidate's total years of experience or key roles facts.
-    "name_mismatch_alert": Check if the name inside the CV matches the 'Candidate Profile Registration Name'. If it clearly differs, output "True", otherwise "False".
+    "is_valid_cv": Boolean (true if it's a real CV/Resume, false if it's a dummy or unrelated document).
+    "ats_score": An integer representing the true ATS score. For valid CVs, this MUST be realistically calculated between 15 and 100 based on fit. Give 0 ONLY if "is_valid_cv" is false.
+    "analysis": A heavily detailed, robust, strictly factual and extremely huge paragraph (minimum 5 to 8 long sentences) evaluating the candidate's exact qualifications, tools, frameworks, and gaps relative to the role. Write exactly like a professional Technical Recruiter. Do not give short lines. Provide a huge, deep paragraph based entirely on facts from the CV.
+    "suggested_roles": An array of 3 job titles that exactly fit the CV facts.
+    "top_skills": An array of top factual skills EXACTLY extracted from the CV. Do not hallucinate skills not present in the document.
+    "experience_summary": A detailed string summarizing the candidate's EXACT total years of experience and key roles AS WRITTEN IN THE CV. Do not guess.
+    "mismatch_alert": Check if the name or details inside the CV matches the 'Candidate Profile Registration Name/Details'. If the CV obviously belongs to someone else or has completely mismatched core details (like a different name), provide a string explaining exactly what details mismatch (e.g., "The name on the CV does not match the registered profile name."). If they match or it's unclear, return an empty string "".
     Do not include markdown tags like \`\`\`json, just output the raw JSON sequence.`;
     
     let mimeType = "application/pdf";
@@ -1200,12 +1206,18 @@ app.post('/api/auth/admin-update-credentials', authenticateToken, async (req, re
   }
 });
 
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-// Fallback to index.html for React Router
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-});
+const fs = require('fs');
+const distPath = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  app.get('*', (req, res) => {
+    res.json({ message: "Hire-X Global API Gateway is running.", status: "Active" });
+  });
+}
 
 let currentPort = process.env.PORT || 5000;
 const startServer = (port) => {

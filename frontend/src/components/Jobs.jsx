@@ -126,8 +126,19 @@ const Jobs = () => {
         if (!analyzeRes.ok) {
            throw new Error("Server or Network error while analyzing.");
         }
-        
         const aiData = await analyzeRes.json();
+        
+        if (aiData.is_valid_cv === false) {
+          alert("Error: This document is NOT a valid CV or Resume. Please upload a real CV. ATS Score: 0");
+          setAnalysisResult(aiData);
+          setApplying(false);
+          return;
+        }
+        
+        if (aiData.mismatch_alert && aiData.mismatch_alert.length > 5) {
+          alert("PROFILE MISMATCH WARNING: \n\n" + aiData.mismatch_alert + "\n\nPlease ensure you upload your own CV.");
+        }
+        
         setAnalysisResult(aiData);
       } catch (err) {
         console.error(err);
@@ -265,8 +276,8 @@ const Jobs = () => {
                         onChange={(e) => {
                           const file = e.target.files[0];
                           if (file) {
-                             if (file.size > 2 * 1024 * 1024) {
-                               alert("PDF size exceeds 2MB limit. Please upload a smaller PDF.");
+                             if (file.size > 20 * 1024 * 1024) {
+                               alert("PDF size exceeds 20MB limit. Please upload a smaller PDF.");
                                e.target.value = '';
                                return;
                              }
@@ -300,7 +311,7 @@ const Jobs = () => {
                                   <svg className="w-8 h-8 text-gray-400 group-hover:text-[#4facfe]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                </div>
                                <h4 className="text-xl font-bold text-[#113253] mb-1">Upload CV Document</h4>
-                               <p className="text-sm text-gray-500 font-medium text-red-500">Upload PDF Only (Max 2MB)</p>
+                               <p className="text-sm text-gray-500 font-medium text-red-500">Upload PDF Only (Max 20MB)</p>
                              </>
                          )}
                       </div>

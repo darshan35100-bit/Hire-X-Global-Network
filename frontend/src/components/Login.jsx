@@ -185,7 +185,7 @@ const Login = () => {
     setDestroyData({ identifier: '', otp: '' });
   }, [isLogin]);
 
-  const blinkNotified = React.useRef(false);
+  const lastBlinkId = React.useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -194,8 +194,8 @@ const Login = () => {
     if (location.state?.isRegister) {
       setIsLogin(false);
     }
-    if (location.state?.blink && !blinkNotified.current) {
-      blinkNotified.current = true;
+    if (location.state?.blink && location.state?.blinkId !== lastBlinkId.current) {
+      lastBlinkId.current = location.state.blinkId;
       setIsBlinking(true);
       if (location.state?.redirectMessage) {
          addNotification(location.state.redirectMessage, "error");

@@ -18,10 +18,18 @@ const HireIQ = () => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    fetch('/api/jobs').then(res => res.json()).then(data => {
-      if (data && data.length > 0) {
-        setCachedJobsText("Available Jobs on Hire-X Platform right now:\n\n" + data.map(j => `**✨ ${j.title.toUpperCase()}**\n📍 Location: ${j.location}\n⏳ Experience: ${j.years_experience} Yrs\n👉 [Click here to apply for this role](/jobs?title=${encodeURIComponent(j.title)})`).join("\n\n---\n\n"));
+    Promise.all([
+      fetch('/api/jobs').then(res => res.json()),
+      fetch('/api/articles').then(res => res.json())
+    ]).then(([jobsData, articlesData]) => {
+      let context = "";
+      if (jobsData && jobsData.length > 0) {
+        context += "Available Jobs on Hire-X Platform right now:\n\n" + jobsData.map(j => `**✨ ${j.title.toUpperCase()}**\n📍 Location: ${j.location}\n⏳ Experience: ${j.years_experience} Yrs\n👉 [Click here to apply for this role](/jobs?title=${encodeURIComponent(j.title)})`).join("\n\n---\n\n");
       }
+      if (articlesData && articlesData.length > 0) {
+        context += "\n\nCurrently Posted Articles/Insights on Hire-X Platform:\n\n" + articlesData.map(a => `**📖 ${a.title}** (Category: ${a.category})\nRead Time: ${a.read_time}\nDescription: ${a.description}`).join("\n\n---\n\n");
+      }
+      if (context) setCachedJobsText(context);
     }).catch(() => {});
   }, []);
 
@@ -83,7 +91,7 @@ const HireIQ = () => {
 
   const handleToggle = () => {
     if (!user) {
-      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access Hire-IQ.' } });
+      navigate('/login', { state: { blink: true, blinkId: Date.now(), redirectMessage: 'Please Login or Register to access Hire-IQ.' } });
       return;
     }
     setIsOpen(!isOpen);
@@ -106,8 +114,9 @@ const HireIQ = () => {
       const chatHistory = messages.filter(m => m.sender !== 'bot-feedback' && m.id !== 1);
       
       let enrichedText = text;
-      if (cachedJobsText && (text.toLowerCase().includes('job') || text.toLowerCase().includes('work') || text.toLowerCase().includes('career') || text.toLowerCase().includes('hire'))) {
-         enrichedText = text + `\n\n[SYSTEM BACKGROUND CONTEXT:\n${cachedJobsText}\n\nCRITICAL INSTRUCTION: You MUST list these available jobs to the user formatted strictly with the markdown links provided.]`;
+      const lowerText = text.toLowerCase();
+      if (cachedJobsText && (lowerText.includes('job') || lowerText.includes('work') || lowerText.includes('career') || lowerText.includes('hire') || lowerText.includes('article') || lowerText.includes('read') || lowerText.includes('insight') || lowerText.includes('news'))) {
+         enrichedText = text + `\n\n[SYSTEM BACKGROUND CONTEXT:\n${cachedJobsText}\n\nCRITICAL INSTRUCTION: You MUST list these available jobs or articles to the user formatted strictly with the markdown links provided if they ask about them.]`;
       }
       
       const botResponse = await askGemini(enrichedText, chatHistory);

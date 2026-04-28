@@ -40,7 +40,7 @@ const Articles = () => {
 
   useEffect(() => { 
     if (!user) {
-      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access Articles.' } });
+      navigate('/login', { state: { blink: true, blinkId: Date.now(), redirectMessage: 'Please Login or Register to access Articles.' } });
     } else {
       fetchArticles(); 
     }

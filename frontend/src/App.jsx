@@ -119,7 +119,7 @@ function App() {
                 <Link to="/jobs" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Explore Opportunities</Link>
                 <Link to="/post-job" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Post a Job</Link>
 
-                <Link to={user ? "/articles" : "/login"} className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Articles</Link>
+                <Link to="/articles" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Articles</Link>
                 <HireIQ />
                 {user ? (
                   <div className="flex items-center space-x-6">
@@ -167,7 +167,7 @@ function App() {
                 <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Home</Link>
                 <Link to="/jobs" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Explore Opportunities</Link>
                 <Link to="/post-job" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Post a Job</Link>
-                <Link to={user ? "/articles" : "/login"} onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Articles</Link>
+                <Link to="/articles" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Articles</Link>
                 <div className="px-3 py-2"><HireIQ /></div>
 
                 {user ? (
@@ -195,7 +195,7 @@ function App() {
             <Route path="/post-job" element={<AdminJobPosting />} />
             <Route path="/login" element={<Login />} />
             <Route path="/jobs" element={<Jobs />} />
-            <Route path="/articles" element={user ? <Articles /> : <Navigate to="/login" />} />
+            <Route path="/articles" element={<Articles />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>

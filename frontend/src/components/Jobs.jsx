@@ -261,8 +261,18 @@ const Jobs = () => {
                     <div className={`relative border-2 border-dashed ${applying ? 'border-[#4facfe] shadow-[0_0_15px_rgba(79,172,254,0.5)] bg-[#f0f9ff]' : 'border-gray-300 bg-white'} rounded-2xl p-8 text-center transition-all duration-300 group`}>
                       <input 
                         type="file"
-                        accept="application/pdf, text/plain"
-                        onChange={(e) => setCvFile(e.target.files[0])}
+                        accept=".pdf"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                             if (file.size > 2 * 1024 * 1024) {
+                               alert("PDF size exceeds 2MB limit. Please upload a smaller PDF.");
+                               e.target.value = '';
+                               return;
+                             }
+                             setCvFile(file);
+                          }
+                        }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         disabled={applying}
                       />
@@ -290,7 +300,7 @@ const Jobs = () => {
                                   <svg className="w-8 h-8 text-gray-400 group-hover:text-[#4facfe]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                </div>
                                <h4 className="text-xl font-bold text-[#113253] mb-1">Upload CV Document</h4>
-                               <p className="text-sm text-gray-500 font-medium">Drop PDF or TXT here</p>
+                               <p className="text-sm text-gray-500 font-medium text-red-500">Upload PDF Only (Max 2MB)</p>
                              </>
                          )}
                       </div>
@@ -405,25 +415,31 @@ const Jobs = () => {
               <div className="bg-[#113253] p-4 flex justify-between items-center shadow-md z-10 relative">
                  <h3 className="text-white font-extrabold text-lg tracking-widest uppercase flex items-center gap-2">
                    <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                   Official Notification Viewer
+                   Document Viewer
                  </h3>
-                 <button onClick={() => setViewDocModal(null)} className="text-white/70 hover:text-red-400 transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur">
-                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                 </button>
+                 <div className="flex items-center gap-2">
+                    <a href={viewDocModal} download="Document" className="text-white hover:text-[#489895] transition-colors bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur font-bold text-sm flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                      Download
+                    </a>
+                    <button onClick={() => setViewDocModal(null)} className="text-white/70 hover:text-red-400 transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                 </div>
               </div>
               
               <div className="flex-1 overflow-auto bg-gray-50 flex items-center justify-center p-4">
-                {String(viewDocModal).startsWith('data:application/pdf') ? (
-                  <iframe src={viewDocModal} className="w-full h-full rounded-xl border border-gray-200 shadow-inner" title="Notification PDF Viewer" />
+                {String(viewDocModal).startsWith('data:application/pdf') || String(viewDocModal).startsWith('data:text/') ? (
+                  <iframe src={viewDocModal} className="w-full h-full rounded-xl border border-gray-200 shadow-inner bg-white" title="Document Viewer" />
                 ) : String(viewDocModal).startsWith('data:image') ? (
-                  <img src={viewDocModal} className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-gray-200" alt="Notification" />
+                  <img src={viewDocModal} className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-gray-200" alt="Document" />
                 ) : (
                   <div className="text-center p-8 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
-                    <p className="font-bold text-[#113253]">Unsupported Document Format</p>
-                    <p className="text-sm text-gray-500 mt-2">The employer uploaded a notification format that cannot be previewed. Only PDF and Images are supported.</p>
+                    <p className="font-bold text-[#113253]">Preview Unavailable for this Format</p>
+                    <p className="text-sm text-gray-500 mt-2">Please click the Download button above to read the document (Word/Excel/etc) on your device.</p>
                   </div>
                 )}
               </div>

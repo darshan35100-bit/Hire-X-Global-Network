@@ -548,7 +548,8 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     if (!process.env.GEMINI_API_KEY) {
       return res.json({ ats_score: Math.floor(Math.random() * 40) + 60, analysis: "Demo Analysis: Great match but missing API key.", suggested_roles: [], top_skills: ["Demo Skill 1", "Demo Skill 2"], experience_summary: "Demo Experience 2+ years" });
     }
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig: { temperature: 0.4 } });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { temperature: 0.4 } });
     const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Analyze the provided CV Document against standard tech jobs (or the provided job description if any). 
     Job Description: "${job_description || 'General Tech Role'}". 
     Candidate Profile Registration Name: "${profile_name || 'N/A'}".

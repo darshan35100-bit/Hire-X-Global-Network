@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
   FaPen, FaTrash, FaTimes, FaArrowRight, FaCloudUploadAlt,
   FaBookOpen, FaPaperPlane, FaClock, FaImage
@@ -23,6 +24,7 @@ const Articles = () => {
 
   const fileInputRef = useRef(null);
   const { user, token } = useContext(AuthContext);
+  const navigate = useNavigate();
   const isMainAdmin = user && user.role === 'main_admin';
 
   // Fetch articles from API
@@ -36,7 +38,13 @@ const Articles = () => {
     }
   };
 
-  useEffect(() => { fetchArticles(); }, []);
+  useEffect(() => { 
+    if (!user) {
+      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access Articles.' } });
+    } else {
+      fetchArticles(); 
+    }
+  }, [user, navigate]);
 
   // Diverse placeholders to keep the UI fresh
   const placeholderImages = [

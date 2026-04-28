@@ -34,7 +34,7 @@ const AdminJobPosting = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login', { state: { isRegister: true } });
+      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access Post a Job.' } });
     }
   }, [user, navigate]);
 
@@ -190,26 +190,54 @@ const AdminJobPosting = () => {
 
               {/* Uploader Section - Glass Style */}
               <div className="space-y-2">
-                <label className={labelStyle}>Company Logo <span className="text-gray-400 font-medium">(Optional)</span></label>
+                <label className={labelStyle}>Company Logo <span className="text-gray-400 font-medium">(Optional - Max 2MB)</span></label>
                 <div className="relative border-2 border-dashed border-emerald-100 rounded-2xl p-4 flex items-center justify-between bg-emerald-50/20 hover:bg-white transition-all cursor-pointer">
-                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFormData({ ...formData, company_logo: e.target.files[0]?.name })} />
+                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert("Image size exceeds 2MB limit. Please upload a smaller image.");
+                        e.target.value = '';
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({ ...formData, company_logo: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }} />
                   <div className="flex items-center gap-3">
                     <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-600"><FaCloudUploadAlt /></div>
                     <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload Logo</span>
                   </div>
-                  <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.company_logo || "CHOOSE"}</span>
+                  <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.company_logo ? "UPLOADED" : "CHOOSE"}</span>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className={labelStyle}>Official Notification <span className="text-gray-400 font-medium">(Optional)</span></label>
+                <label className={labelStyle}>Official Notification <span className="text-gray-400 font-medium">(Optional - PDF Only)</span></label>
                 <div className="relative border-2 border-dashed border-emerald-100 rounded-2xl p-4 flex items-center justify-between bg-emerald-50/20 hover:bg-white transition-all cursor-pointer">
-                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFormData({ ...formData, official_notification: e.target.files[0]?.name })} />
+                  <input type="file" accept=".pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert("File size exceeds 2MB limit. Please upload a smaller PDF.");
+                        e.target.value = '';
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({ ...formData, official_notification: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }} />
                   <div className="flex items-center gap-3">
                     <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-600"><FaFileAlt /></div>
-                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload Document</span>
+                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload PDF Only</span>
                   </div>
-                  <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.official_notification || "CHOOSE"}</span>
+                  <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.official_notification ? "UPLOADED" : "CHOOSE"}</span>
                 </div>
               </div>
 
@@ -218,9 +246,18 @@ const AdminJobPosting = () => {
                 <label className={labelStyle}>Education Level <span className="text-emerald-400">*</span></label>
                 <select required value={formData.education_level} onChange={e => setFormData({ ...formData, education_level: e.target.value })} className={`${inputStyle} appearance-none cursor-pointer`}>
                   <option value="">Choose Level</option>
-                  <option value="High School">High School</option>
-                  <option value="Bachelor's Degree">Bachelor's Degree</option>
-                  <option value="Master's Degree">Master's Degree</option>
+                  <option value="High School / 10th / 12th">High School / 10th / 12th</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="B.Tech / B.E">B.Tech / B.E</option>
+                  <option value="B.Sc / BCA">B.Sc / BCA</option>
+                  <option value="B.Com / BBA">B.Com / BBA</option>
+                  <option value="BA">BA</option>
+                  <option value="Master's Degree (M.Tech / ME)">Master's Degree (M.Tech / ME)</option>
+                  <option value="Master's Degree (MCA / M.Sc)">Master's Degree (MCA / M.Sc)</option>
+                  <option value="Master's Degree (MBA / M.Com / MA)">Master's Degree (MBA / M.Com / MA)</option>
+                  <option value="Ph.D / Doctorate">Ph.D / Doctorate</option>
+                  <option value="Any Graduate">Any Graduate</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 

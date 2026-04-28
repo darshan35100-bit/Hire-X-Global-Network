@@ -144,6 +144,7 @@ const Login = () => {
   // New States
   const [robotChecked, setRobotChecked] = useState(false);
   const [loginBtnState, setLoginBtnState] = useState(0); // 0 = Remember Me, 1 = Sign In
+  const [isBlinking, setIsBlinking] = useState(false);
 
   // Forgot Password Flow
   const [forgotStep, setForgotStep] = useState(0); 
@@ -184,6 +185,8 @@ const Login = () => {
     setDestroyData({ identifier: '', otp: '' });
   }, [isLogin]);
 
+  const blinkNotified = React.useRef(false);
+
   useEffect(() => {
     if (user) {
       navigate('/');
@@ -191,7 +194,18 @@ const Login = () => {
     if (location.state?.isRegister) {
       setIsLogin(false);
     }
-  }, [user, navigate, location]);
+    if (location.state?.blink && !blinkNotified.current) {
+      blinkNotified.current = true;
+      setIsBlinking(true);
+      if (location.state?.redirectMessage) {
+         addNotification(location.state.redirectMessage, "error");
+      }
+      setTimeout(() => setIsBlinking(false), 800);
+      
+      // Clear the state so it doesn't blink again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [user, navigate, location, addNotification]);
 
   const handleNameChange = (e) => {
     const rawVal = e.target.value;
@@ -493,8 +507,14 @@ const Login = () => {
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}
-        className="relative z-10 w-full max-w-4xl p-6"
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ 
+          opacity: 1, 
+          scale: isBlinking ? [1, 0.95, 1.05, 1] : 1,
+          filter: isBlinking ? ["brightness(1)", "brightness(1.5)", "brightness(1)"] : "none"
+        }} 
+        transition={{ duration: isBlinking ? 0.6 : 0.8 }}
+        className={`relative z-10 w-full max-w-4xl p-6 transition-all duration-300 ${isBlinking ? 'ring-4 ring-red-400/80 shadow-[0_0_40px_rgba(248,113,113,0.5)] rounded-[38px]' : ''}`}
       >
         <div className="bg-white/20 backdrop-blur-md rounded-[30px] border border-white/40 shadow-[0_30px_70px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden relative">
           

@@ -83,7 +83,7 @@ const HireIQ = () => {
 
   const handleToggle = () => {
     if (!user) {
-      navigate('/login', { state: { isRegister: true } });
+      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access Hire-IQ.' } });
       return;
     }
     setIsOpen(!isOpen);

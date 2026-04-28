@@ -74,7 +74,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate('/login', { state: { isRegister: true } });
+      navigate('/login', { state: { blink: true, redirectMessage: 'Please Login or Register to access your Profile.' } });
       return;
     }
     fetchProfile();
@@ -977,10 +977,18 @@ const Profile = () => {
                </div>
             </div>
             <div className="flex-grow w-full bg-gray-100 flex items-center justify-center p-6">
-               {viewCvModal.startsWith('data:image') ? (
+               {viewCvModal.startsWith('data:application/pdf') || viewCvModal.startsWith('data:text/') ? (
+                 <iframe src={viewCvModal} className="w-full h-full border-0 rounded-xl shadow-inner bg-white" title="Document Viewer" />
+               ) : viewCvModal.startsWith('data:image') ? (
                  <img src={viewCvModal} className="max-w-full max-h-full object-contain shadow-lg rounded-xl" alt="Document" />
                ) : (
-                 <iframe src={viewCvModal} className="w-full h-full border-0 rounded-xl shadow-inner bg-white" title="Document Viewer" />
+                 <div className="text-center p-8 bg-white rounded-2xl border border-gray-200 shadow-sm max-w-md">
+                   <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                   </div>
+                   <p className="font-bold text-[#113253]">Preview Unavailable</p>
+                   <p className="text-sm text-gray-500 mt-2">This is a Word/Doc file which cannot be previewed directly in the browser. Please use the Download button above to read it on your device.</p>
+                 </div>
                )}
             </div>
           </div>

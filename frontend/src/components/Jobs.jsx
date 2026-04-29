@@ -174,11 +174,18 @@ const Jobs = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col overflow-hidden bg-gradient-to-b from-[#e0fdf4] via-[#bbf7d0] to-[#86efac] font-sans">
+    <div className="relative w-full min-h-screen flex flex-col overflow-hidden bg-gradient-to-br from-[#a7f3d0] via-[#6ee7b7] to-[#34d399] font-sans">
       {/* Decorative Background Elements */}
-      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-white/40 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-[-150px] right-[-150px] w-[500px] h-[500px] bg-[#34d399]/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute top-[30%] left-[80%] w-[300px] h-[300px] bg-[#6ee7b7]/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] bg-white/20 rounded-full blur-[80px] pointer-events-none"></div>
+      <div className="absolute bottom-[-150px] right-[-150px] w-[600px] h-[600px] bg-[#10b981]/20 rounded-full blur-[100px] pointer-events-none"></div>
+      
+      {/* Abstract wave patterns for the background as seen in the photo */}
+      <svg className="absolute bottom-0 right-0 opacity-20 pointer-events-none" width="400" height="400" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#059669" d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,81.1,-46.2C90.4,-33.3,95.9,-17.6,94.9,-2.4C93.9,12.8,86.4,27.5,75.9,39.6C65.4,51.7,51.9,61.1,37.3,67.6C22.7,74.1,7,77.7,-8.4,78.2C-23.8,78.7,-38.9,76.1,-52.1,69.1C-65.3,62.1,-76.6,50.7,-84.1,36.7C-91.6,22.7,-95.3,6.1,-93,-9.6C-90.7,-25.3,-82.4,-40.1,-70.5,-51C-58.6,-61.9,-43,-68.9,-28.5,-74.6C-14,-80.3,1.4,-84.7,15.8,-83.1C30.2,-81.5,43.6,-73.9,44.7,-76.4Z" transform="translate(100 100) scale(1.1)" />
+      </svg>
+      <svg className="absolute top-10 left-0 opacity-10 pointer-events-none" width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#047857" d="M38.1,-62.4C49.9,-53.8,60.3,-43.3,68.7,-30.5C77.1,-17.7,83.5,-2.6,80.7,11.3C77.9,25.2,65.9,37.9,53,47.4C40.1,56.9,26.3,63.2,11.4,66.1C-3.5,69,-19.5,68.5,-32.8,61.7C-46.1,54.9,-56.7,41.8,-63.9,27C-71.1,12.2,-74.9,-4.3,-71.4,-19.3C-67.9,-34.3,-57.1,-47.8,-43.9,-56C-30.7,-64.2,-15.4,-67.1,-0.5,-66.3C14.4,-65.5,28.8,-61,38.1,-62.4Z" transform="translate(100 100)" />
+      </svg>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 w-full flex-grow z-10">
 
@@ -208,27 +215,27 @@ const Jobs = () => {
                   transition={{ delay: idx * 0.1 }}
                   className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[24px] p-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all hover:-translate-y-1 flex flex-col h-full"
                 >
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-start gap-3 mb-4">
                     {job.company_logo && typeof job.company_logo === 'string' && job.company_logo.startsWith('data:image') ? (
-                      <img src={job.company_logo} alt="Logo" className="w-12 h-12 rounded-lg object-contain bg-white/80 shadow-sm p-1 flex-shrink-0 border border-white/50" />
+                      <img src={job.company_logo} alt="Logo" className="w-10 h-10 rounded shadow-sm object-cover bg-white p-[2px] flex-shrink-0 border border-white/50" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xl shadow-sm border border-white/50 flex-shrink-0">
+                      <div className="w-10 h-10 rounded bg-white/50 flex items-center justify-center text-teal-800 font-bold text-lg shadow-sm border border-white/50 flex-shrink-0">
                         {job.company_name ? job.company_name.charAt(0) : 'C'}
                       </div>
                     )}
                     <div>
-                      <h4 className="text-[17px] font-bold text-gray-800 leading-tight">{job.title}</h4>
-                      <p className="text-[11px] font-black text-gray-600 uppercase tracking-widest mt-1.5">{job.company_name}</p>
+                      <h4 className="text-[16px] font-black text-[#0f2e26] leading-tight">{job.title}</h4>
+                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mt-1">{job.company_name}</p>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center mb-3">
                     {job.qualification ? (
-                      <span className="bg-white/60 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm border border-white/50">
+                      <span className="bg-white/50 text-[#0f766e] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm border border-white/60">
                         {job.qualification}
                       </span>
                     ) : (
-                      <span className="bg-white/60 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm border border-white/50">
+                      <span className="bg-white/50 text-[#0f766e] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm border border-white/60">
                         Degree
                       </span>
                     )}
@@ -245,12 +252,12 @@ const Jobs = () => {
 
                   <div className="flex gap-2 mb-3 flex-wrap">
                     {job.location && (
-                      <span className="bg-white/50 text-gray-800 text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm border border-white/40 flex items-center gap-1">
+                      <span className="bg-white/40 text-[#0f766e] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm border border-white/50 flex items-center gap-1">
                         📍 {job.location}
                       </span>
                     )}
                     {job.years_experience && (
-                      <span className="bg-white/50 text-gray-800 text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm border border-white/40 flex items-center gap-1">
+                      <span className="bg-white/40 text-[#0f766e] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm border border-white/50 flex items-center gap-1">
                         ⏳ {job.years_experience} Exp
                       </span>
                     )}
@@ -258,7 +265,7 @@ const Jobs = () => {
 
                   {job.end_date && (
                     <div className="mb-4">
-                      <span className="bg-white/50 text-gray-800 text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm border border-white/40 inline-flex items-center gap-1">
+                      <span className="bg-white/40 text-[#0f766e] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm border border-white/50 inline-flex items-center gap-1">
                         📅 {formatUIStandardDate(job.end_date)}
                       </span>
                     </div>
@@ -266,7 +273,7 @@ const Jobs = () => {
 
                   <button
                     onClick={() => handleApplyClick(job)}
-                    className="w-full mt-auto py-3 rounded-xl bg-gradient-to-r from-[#4ade80] to-[#2dd4bf] text-white font-bold shadow-md hover:shadow-lg hover:from-[#22c55e] hover:to-[#14b8a6] transition-all duration-300 active:scale-95 uppercase tracking-widest text-xs border border-white/20"
+                    className="w-full mt-auto py-2.5 rounded-xl bg-gradient-to-r from-[#34d399] to-[#059669] text-white font-black shadow-lg hover:shadow-xl hover:from-[#10b981] hover:to-[#047857] transition-all duration-300 active:scale-95 uppercase tracking-widest text-[10px] border border-white/30"
                   >
                     Apply Now
                   </button>
@@ -476,7 +483,6 @@ const Jobs = () => {
         </div>
       )}
 
-    </div>
     </div>
   );
 };

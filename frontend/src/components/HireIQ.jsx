@@ -27,7 +27,7 @@ const HireIQ = () => {
         context += "Available Jobs on Hire-X Platform right now:\n\n" + jobsData.map(j => `**✨ ${j.title.toUpperCase()}**\n📍 Location: ${j.location}\n⏳ Experience: ${j.years_experience} Yrs\n👉 [Click here to apply for this role](/jobs?title=${encodeURIComponent(j.title)})`).join("\n\n---\n\n");
       }
       if (articlesData && articlesData.length > 0) {
-        context += "\n\nCurrently Posted Articles/Insights on Hire-X Platform:\n\n" + articlesData.map(a => `**📖 ${a.title}** (Category: ${a.category})\nRead Time: ${a.read_time}\nDescription: ${a.description}`).join("\n\n---\n\n");
+        context += "\n\nCurrently Posted Articles/Insights on Hire-X Platform:\n\n" + articlesData.map(a => `**📖 ${a.title}** (Category: ${a.category})\nRead Time: ${a.read_time}\nDescription: ${a.description}\n👉 [Click here to read this article](/articles?title=${encodeURIComponent(a.title)})`).join("\n\n---\n\n");
       }
       if (context) setCachedJobsText(context);
     }).catch(() => {});

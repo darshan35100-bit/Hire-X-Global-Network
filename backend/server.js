@@ -554,18 +554,18 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     Job Description: "${job_description || 'General Tech Role'}". 
     Candidate Profile Registration Name/Details: "${profile_name || 'N/A'}".
     
-    FIRST, DETERMINE IF THIS DOCUMENT IS A REAL CV/RESUME. If it is just a random PDF, a dummy file, an image, or anything that is clearly NOT a CV/Resume, you MUST set "is_valid_cv" to false, "ats_score" to 0, and explain in "analysis" that the document is not a valid CV.
+    CRITICAL STEP 1: Determine if this document is a genuine CV/Resume. If it is a dummy PDF, a blank page, an image, a random article, or anything clearly NOT a CV/Resume, you MUST set "is_valid_cv" to false, "ats_score" to 0, and explain in "analysis" that the document is not a valid CV.
     
-    If it IS a valid CV, evaluate it strictly and realistically.
+    CRITICAL STEP 2: If it IS a valid CV, evaluate it strictly and realistically just like a human HR professional. 
     
-    Provide your output STRICTLY in JSON format with the following keys. ALL TEXT MUST BE IN ENGLISH:
+    Provide your output STRICTLY in JSON format with the following exact keys. ALL TEXT MUST BE IN ENGLISH:
     "is_valid_cv": Boolean (true if it's a real CV/Resume, false if it's a dummy or unrelated document).
-    "ats_score": An integer representing the true ATS score. For valid CVs, this MUST be realistically calculated between 15 and 100 based on fit. Give 0 ONLY if "is_valid_cv" is false.
-    "analysis": A heavily detailed, robust, strictly factual and extremely huge paragraph (minimum 5 to 8 long sentences) evaluating the candidate's exact qualifications, tools, frameworks, and gaps relative to the role. Write exactly like a professional Technical Recruiter. Do not give short lines. Provide a huge, deep paragraph based entirely on facts from the CV.
-    "suggested_roles": An array of 3 job titles that exactly fit the CV facts.
-    "top_skills": An array of top factual skills EXACTLY extracted from the CV. Do not hallucinate skills not present in the document.
-    "experience_summary": A detailed string summarizing the candidate's EXACT total years of experience and key roles AS WRITTEN IN THE CV. Do not guess.
-    "mismatch_alert": Check if the name or details inside the CV matches the 'Candidate Profile Registration Name/Details'. If the CV obviously belongs to someone else or has completely mismatched core details (like a different name), provide a string explaining exactly what details mismatch (e.g., "The name on the CV does not match the registered profile name."). If they match or it's unclear, return an empty string "".
+    "ats_score": Integer (15 to 100 for valid CVs based on strict ATS criteria, 0 ONLY if is_valid_cv is false).
+    "analysis": A massive, incredibly detailed, strictly factual paragraph (at least 8-10 long sentences) evaluating the candidate's precise qualifications, tools, frameworks, and gaps relative to the role. Act as a critical human HR evaluator. Do not write generic text; strictly use facts from the CV.
+    "suggested_roles": Array of 3 job titles matching the CV facts.
+    "top_skills": Array of factual skills EXACTLY extracted from the CV text. DO NOT HALLUCINATE OR INVENT SKILLS. If a skill is not written in the CV, do not include it.
+    "experience_summary": Detailed string of EXACT total years of experience and key roles exactly as written in the CV. Do not invent experience.
+    "mismatch_alert": Check if the name/details in the CV match the 'Candidate Profile Registration Name/Details'. If the CV belongs to someone else (different name/details), provide a string explaining EXACTLY what mismatched (e.g. "The name on the CV does not match your registered profile name."). If they match, return an empty string "".
     Do not include markdown tags like \`\`\`json, just output the raw JSON sequence.`;
     
     let mimeType = "application/pdf";

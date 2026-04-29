@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FaPen, FaTrash, FaTimes, FaArrowRight, FaCloudUploadAlt,
   FaBookOpen, FaPaperPlane, FaClock, FaImage
@@ -25,6 +25,7 @@ const Articles = () => {
   const fileInputRef = useRef(null);
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const isMainAdmin = user && user.role === 'main_admin';
 
   // Fetch articles from API
@@ -33,6 +34,14 @@ const Articles = () => {
       const res = await fetch('/api/articles');
       const data = await res.json();
       setArticles(data);
+      const searchParams = new URLSearchParams(location.search);
+      const titleToOpen = searchParams.get('title');
+      if (titleToOpen) {
+          const matchedArticle = data.find(a => a.title.toLowerCase() === titleToOpen.toLowerCase());
+          if (matchedArticle) {
+              setSelectedArticle(matchedArticle);
+          }
+      }
     } catch (err) {
       console.error("Failed to fetch articles", err);
     }

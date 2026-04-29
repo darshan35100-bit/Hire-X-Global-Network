@@ -549,7 +549,13 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
       return res.json({ ats_score: Math.floor(Math.random() * 40) + 60, analysis: "Demo Analysis: Great match but missing API key.", suggested_roles: [], top_skills: ["Demo Skill 1", "Demo Skill 2"], experience_summary: "Demo Experience 2+ years" });
     }
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { temperature: 0.4 } });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash", 
+      generationConfig: { 
+        temperature: 0.2,
+        responseMimeType: "application/json"
+      } 
+    });
     const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Analyze the provided PDF Document against standard tech jobs (or the provided job description if any). 
     Job Description: "${job_description || 'General Tech Role'}". 
     Candidate Profile Registration Name/Details: "${profile_name || 'N/A'}".
@@ -585,7 +591,7 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error("CV Analysis Error:", err);
-    res.json({ ats_score: 75, analysis: "Fallback Analysis: Good profile based on standard metrics. Uploaded Document parsed.", suggested_roles: ["Software Engineer", "Developer", "Analyst"], top_skills: ["HTML", "CSS", "Problem Solving"], experience_summary: "Adequate experience identified." });
+    res.json({ is_valid_cv: false, ats_score: 0, analysis: "ERROR: This document could not be analyzed or is not a recognizable CV/Resume. Please upload a valid, clear text-based PDF CV.", suggested_roles: [], top_skills: [], experience_summary: "N/A", mismatch_alert: "" });
   }
 });
 

@@ -16,14 +16,14 @@ const Jobs = () => {
   const [finalSubmitSuccess, setFinalSubmitSuccess] = useState(false);
   const [submittingApp, setSubmittingApp] = useState(false);
   const [viewDocModal, setViewDocModal] = useState(null);
-  const locationFragment = useLocation().search;
+  const locationFragment = useLocation().search; // ?category=Web
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const formatUIStandardDate = (dateStr) => {
     if (!dateStr) return '';
     try {
-      let dStr = dateStr.toString().split(' ')[0];
+      let dStr = dateStr.toString().split(' ')[0]; // Extract just the YYYY-MM-DD part if possible
       if (dStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [y, m, d] = dStr.split('-');
         return `${d}-${m}-${y} 11:59 PM`;
@@ -55,6 +55,8 @@ const Jobs = () => {
           setSuggestionMsg('');
           setLoading(false);
         } else {
+          // If no matches for both, try fetching without location if both were provided,
+          // or just show empty if no fallback needed.
           if (loc && title) {
             fetch(`/api/jobs?title=${title}`)
               .then(res2 => res2.json())
@@ -106,6 +108,7 @@ const Jobs = () => {
     }
     setApplying(true);
 
+    // Convert to base64
     const reader = new FileReader();
     reader.readAsDataURL(cvFile);
     reader.onload = async () => {
@@ -113,22 +116,33 @@ const Jobs = () => {
         const base64Data = reader.result.split(',')[1];
         setCvBase64(reader.result);
 
+        // 1. Analyze Document CV
         const analyzeRes = await fetch('/api/cv-analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({
-            cv_pdf_base64: base64Data,
-            job_description: selectedJob.description,
-            profile_name: user?.name,
-            mimeType: cvFile.type || 'application/pdf'
-          })
+          body: JSON.stringify({ cv_pdf_base64: base64Data, job_description: selectedJob.description, profile_name: user?.name, mimeType: cvFile.type || 'application/pdf' })
         });
 
-        if (!analyzeRes.ok) throw new Error();
+        if (!analyzeRes.ok) {
+          throw new Error("Server or Network error while analyzing.");
+        }
         const aiData = await analyzeRes.json();
+
+        if (aiData.is_valid_cv === false) {
+          alert("Error: This document is NOT a valid CV or Resume. Please upload a real CV. ATS Score: 0");
+          setAnalysisResult(aiData);
+          setApplying(false);
+          return;
+        }
+
+        if (aiData.mismatch_alert && aiData.mismatch_alert.length > 5) {
+          alert("PROFILE MISMATCH WARNING: \n\n" + aiData.mismatch_alert + "\n\nPlease ensure you upload your own CV.");
+        }
+
         setAnalysisResult(aiData);
-      } catch {
-        alert("Error processing document.");
+      } catch (err) {
+        console.error(err);
+        alert("System error processing your document. Please verify it is a valid PDF/TXT file and under 20MB.");
       }
       setApplying(false);
     };
@@ -147,92 +161,119 @@ const Jobs = () => {
           cv_analysis: analysisResult.analysis
         })
       });
-
       const resultData = await appRes.json();
       if (appRes.ok) {
         setFinalSubmitSuccess(true);
       } else {
         alert(resultData.error || "Failed to apply");
       }
-    } catch {
+    } catch (err) {
       alert("Network error processing final submission.");
     }
     setSubmittingApp(false);
   };
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col overflow-hidden">
+    <div className="relative w-full min-h-screen flex flex-col overflow-hidden bg-gradient-to-b from-[#e0fdf4] via-[#bbf7d0] to-[#86efac] font-sans">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-white/40 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-[-150px] right-[-150px] w-[500px] h-[500px] bg-[#34d399]/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[30%] left-[80%] w-[300px] h-[300px] bg-[#6ee7b7]/30 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[rgb(200,255,240)] via-[rgb(180,220,255)] to-[rgb(255,220,220)]"></div>
-      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(0,255,200,0.35),transparent_70%)] blur-3xl"></div>
-      <div className="absolute bottom-[-120px] right-[-120px] w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(255,100,120,0.25),transparent_70%)] blur-3xl"></div>
-      <div className="absolute top-[40%] left-[60%] w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(0,150,255,0.25),transparent_70%)] blur-2xl"></div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 w-full flex-grow z-10">
 
-      <div className="relative max-w-7xl mx-auto px-4 py-16 w-full">
-
-        <div className="mb-10 text-center">
-          <h2 className="text-4xl font-extrabold bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 bg-clip-text text-transparent">
+        <div className="mb-12 text-center">
+          <h2 className="text-4xl font-extrabold text-[#064e3b] mb-3 drop-shadow-sm tracking-tight">
             All Job Opportunities
           </h2>
-          <p className="text-gray-600 mt-3">Browse all exclusive roles spanning multiple categories globally.</p>
+          <p className="text-[#047857] font-medium text-sm sm:text-base max-w-2xl mx-auto">Browse all exclusive roles spanning multiple categories globally.</p>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-gray-600 font-bold">Loading remote jobs...</div>
+          <div className="text-center py-20 text-[#064e3b] font-bold animate-pulse text-lg">Loading opportunities...</div>
         ) : (
           <>
             {suggestionMsg && (
-              <div className="bg-yellow-50 text-yellow-800 border-l-4 border-yellow-400 p-4 mb-8 text-center font-bold rounded shadow-sm">
+              <div className="bg-yellow-50/90 text-yellow-800 border-l-4 border-yellow-400 p-4 mb-8 text-center font-bold rounded shadow-sm backdrop-blur-sm">
                 {suggestionMsg}
               </div>
             )}
 
-            <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <motion.div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {jobs.length > 0 ? jobs.map((job, idx) => (
                 <motion.div
                   key={job.id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2"
+                  className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[24px] p-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all hover:-translate-y-1 flex flex-col h-full"
                 >
                   <div className="flex items-start gap-4 mb-4">
-                    {job.company_logo && typeof job.company_logo === 'string' && job.company_logo.startsWith('data:image') && (
-                      <img src={job.company_logo} alt="Logo" className="w-12 h-12 rounded-lg object-contain bg-white shadow-sm border border-gray-100 p-1 flex-shrink-0" />
+                    {job.company_logo && typeof job.company_logo === 'string' && job.company_logo.startsWith('data:image') ? (
+                      <img src={job.company_logo} alt="Logo" className="w-12 h-12 rounded-lg object-contain bg-white/80 shadow-sm p-1 flex-shrink-0 border border-white/50" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xl shadow-sm border border-white/50 flex-shrink-0">
+                        {job.company_name ? job.company_name.charAt(0) : 'C'}
+                      </div>
                     )}
                     <div>
-                      <h4 className="text-xl font-bold text-gray-800 leading-tight">{job.title}</h4>
-                      <p className="text-xs font-black text-gray-500 uppercase tracking-widest mt-1">{job.company_name}</p>
+                      <h4 className="text-[17px] font-bold text-gray-800 leading-tight">{job.title}</h4>
+                      <p className="text-[11px] font-black text-gray-600 uppercase tracking-widest mt-1.5">{job.company_name}</p>
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">{job.description}</p>
+                  <div className="flex justify-between items-center mb-3">
+                    {job.qualification ? (
+                      <span className="bg-white/60 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm border border-white/50">
+                        {job.qualification}
+                      </span>
+                    ) : (
+                      <span className="bg-white/60 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm border border-white/50">
+                        Degree
+                      </span>
+                    )}
 
-                  <div className="flex gap-2 mb-4 flex-wrap">
-                    {job.location && <span className="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full font-bold">{job.location}</span>}
-                    {job.years_experience && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-bold">{job.years_experience} Exp</span>}
-                    {job.end_date && <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-bold">Last Date: {formatUIStandardDate(job.end_date).split(' ')[0]}</span>}
+                    {job.official_notification && (
+                      <a href={job.official_notification} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[10px] font-bold text-gray-800 hover:text-emerald-700 transition-colors bg-white/40 px-2 py-1 rounded-md shadow-sm border border-white/50">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        View Notification
+                      </a>
+                    )}
                   </div>
 
-                  {job.official_notification && (
+                  <p className="text-xs text-gray-700 mb-5 line-clamp-3 leading-relaxed flex-grow">{job.description}</p>
+
+                  <div className="flex gap-2 mb-3 flex-wrap">
+                    {job.location && (
+                      <span className="bg-white/50 text-gray-800 text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm border border-white/40 flex items-center gap-1">
+                        📍 {job.location}
+                      </span>
+                    )}
+                    {job.years_experience && (
+                      <span className="bg-white/50 text-gray-800 text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm border border-white/40 flex items-center gap-1">
+                        ⏳ {job.years_experience} Exp
+                      </span>
+                    )}
+                  </div>
+
+                  {job.end_date && (
                     <div className="mb-4">
-                      <a href={job.official_notification} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-600 hover:text-blue-800 underline uppercase tracking-widest">
-                        View Official Notification
-                      </a>
+                      <span className="bg-white/50 text-gray-800 text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm border border-white/40 inline-flex items-center gap-1">
+                        📅 {formatUIStandardDate(job.end_date)}
+                      </span>
                     </div>
                   )}
 
                   <button
                     onClick={() => handleApplyClick(job)}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-500 text-white font-bold shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 active:scale-95"
+                    className="w-full mt-auto py-3 rounded-xl bg-gradient-to-r from-[#4ade80] to-[#2dd4bf] text-white font-bold shadow-md hover:shadow-lg hover:from-[#22c55e] hover:to-[#14b8a6] transition-all duration-300 active:scale-95 uppercase tracking-widest text-xs border border-white/20"
                   >
                     Apply Now
                   </button>
                 </motion.div>
               )) : (
-                <div className="col-span-full text-center py-20 bg-white/40 backdrop-blur rounded-xl border border-dashed border-gray-300">
-                  <p className="text-gray-600 font-bold">No jobs currently available.</p>
+                <div className="col-span-full text-center py-20 bg-white/40 backdrop-blur rounded-[24px] border border-white/60 shadow-sm">
+                  <p className="text-[#064e3b] font-bold text-lg">No jobs currently available.</p>
                 </div>
               )}
             </motion.div>
@@ -240,157 +281,202 @@ const Jobs = () => {
         )}
       </div>
 
-      {/* Dynamic Apply Modal */}
+      {/* Apply Modal */}
       <AnimatePresence>
         {selectedJob && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative"
-            >
-              <button
-                onClick={() => setSelectedJob(null)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-2 rounded-full transition-colors shadow-sm"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
+              <button disabled={applying || submittingApp} onClick={() => { setSelectedJob(null); setAnalysisResult(null); setFinalSubmitSuccess(false); }} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
 
-              {!finalSubmitSuccess ? (
-                <>
-                  <h3 className="text-2xl font-black text-gray-800 mb-2">Apply for {selectedJob.title}</h3>
-                  <p className="text-gray-600 mb-6 font-medium text-sm">at {selectedJob.company_name}</p>
+              <div className="mb-8">
+                <h3 className="text-3xl font-black text-gray-900 mb-2">Apply for {selectedJob.title}</h3>
+                <p className="text-gray-500 font-medium">{selectedJob.company_name}</p>
+              </div>
 
-                  {!analysisResult ? (
-                    <div className="space-y-6">
-                      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:bg-gray-100 transition-colors">
-                        <label className="cursor-pointer block">
-                          <input
-                            type="file"
-                            accept="application/pdf"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                if (file.type !== 'application/pdf') {
-                                  alert("Please upload a valid PDF document only. Only PDF is accepted.");
-                                  e.target.value = null;
-                                  return;
-                                }
-                                if (file.size > 20 * 1024 * 1024) {
-                                  alert("File size must be below 20 MB.");
-                                  e.target.value = null;
-                                  return;
-                                }
-                                setCvFile(file);
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <div className="text-4xl mb-3">📄</div>
-                          <p className="text-gray-700 font-bold mb-1">Click to Upload CV (PDF)</p>
-                          <p className="text-xs text-gray-500">Max size 20MB. PDF only.</p>
-                        </label>
-                        {cvFile && (
-                          <div className="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-between">
-                            <span className="font-bold text-teal-800 text-sm truncate">{cvFile.name}</span>
-                            <button onClick={() => setCvFile(null)} className="text-red-500 font-bold text-xs">Remove</button>
-                          </div>
-                        )}
+              {!analysisResult ? (
+                <div className="space-y-6">
+                  <div className="bg-gray-50 border-2 border-dashed border-emerald-300 rounded-[24px] p-8 text-center hover:bg-emerald-50/30 transition-colors shadow-inner">
+                    <label className="cursor-pointer block">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            if (file.type !== 'application/pdf') {
+                              alert("Please upload a valid PDF document only. Only PDF is accepted.");
+                              e.target.value = null;
+                              return;
+                            }
+                            if (file.size > 20 * 1024 * 1024) {
+                              alert("File size must be below 20 MB.");
+                              e.target.value = null;
+                              return;
+                            }
+                            setCvFile(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <div className="text-5xl mb-4 drop-shadow-sm">📄</div>
+                      <p className="text-gray-800 font-bold mb-1 text-lg">Click to Upload CV (PDF)</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Max size 20MB</p>
+                    </label>
+                    {cvFile && (
+                      <div className="mt-6 p-4 bg-emerald-100 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
+                        <span className="font-bold text-emerald-900 text-sm truncate pr-4">{cvFile.name}</span>
+                        <button onClick={() => setCvFile(null)} className="text-red-500 hover:text-red-700 font-black text-xs uppercase tracking-widest transition-colors">Remove</button>
                       </div>
+                    )}
+                  </div>
 
-                      <button
-                        onClick={analyzeCV}
-                        disabled={!cvFile || applying}
-                        className="w-full py-4 bg-gradient-to-r from-[#113253] to-[#489895] text-white font-extrabold rounded-2xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-sm"
-                      >
-                        {applying ? 'Analyzing Profile using AI...' : 'Analyze & Proceed'}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-6 animate-fadeIn">
-                      <div className={`p-6 rounded-2xl border ${analysisResult.is_valid_cv === false ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
-                        {analysisResult.is_valid_cv === false ? (
-                          <div className="text-center">
-                            <div className="text-4xl mb-2">⚠️</div>
-                            <h4 className="text-xl font-black text-red-600 mb-2">Invalid Document Detected</h4>
-                            <p className="text-red-800 font-medium text-sm mb-4">{analysisResult.analysis}</p>
-                            <button onClick={() => setAnalysisResult(null)} className="px-6 py-2 bg-red-600 text-white font-bold rounded-xl text-sm transition-transform hover:scale-105 shadow-sm">Upload Valid CV</button>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-                              <h4 className="text-xl font-black text-gray-800">AI Profile Match</h4>
-                              <div className={`text-4xl font-black ${analysisResult.ats_score > 75 ? 'text-green-500' : analysisResult.ats_score > 40 ? 'text-yellow-500' : 'text-red-500'}`}>
-                                {analysisResult.ats_score}%
-                              </div>
-                            </div>
-                            
-                            {analysisResult.mismatch_alert && analysisResult.mismatch_alert.trim() !== "" && (
-                              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md mb-6 shadow-sm">
-                                <p className="text-yellow-800 font-bold text-sm flex items-start gap-2">
-                                  <span className="text-lg">⚠️</span> 
-                                  <span>{analysisResult.mismatch_alert}</span>
-                                </p>
-                              </div>
-                            )}
-
-                            <div className="space-y-5">
-                              <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Detailed Analysis</p>
-                                <p className="text-sm font-medium text-gray-700 bg-white p-4 rounded-xl shadow-sm leading-relaxed border border-gray-100 whitespace-pre-wrap">{analysisResult.analysis}</p>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Top Skills Extracted</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {analysisResult.top_skills?.map((s, i) => (
-                                      <span key={i} className="bg-white border border-gray-200 text-xs font-bold px-2 py-1 rounded shadow-sm text-gray-800">{s}</span>
-                                    ))}
-                                    {(!analysisResult.top_skills || analysisResult.top_skills.length === 0) && (
-                                      <span className="text-xs font-bold text-gray-500 italic">No exact skills extracted.</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Experience Evaluated</p>
-                                  <p className="text-sm font-bold text-gray-800 bg-white p-3 rounded-xl shadow-sm border border-gray-100">{analysisResult.experience_summary}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      {analysisResult.is_valid_cv !== false && (
-                        <button
-                          onClick={finalSubmit}
-                          disabled={submittingApp}
-                          className="w-full py-4 bg-gradient-to-r from-teal-500 to-green-500 text-white font-extrabold rounded-2xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-sm"
-                        >
-                          {submittingApp ? 'Submitting Application...' : 'Submit Application Now'}
+                  <button
+                    onClick={analyzeCV}
+                    disabled={!cvFile || applying}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm"
+                  >
+                    {applying ? 'Evaluating Profile using AI...' : 'Analyze & Proceed'}
+                  </button>
+                </div>
+              ) : !finalSubmitSuccess ? (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className={`p-6 rounded-3xl border ${analysisResult.is_valid_cv === false ? 'bg-red-50 border-red-300 shadow-sm' : 'bg-gray-50 border-gray-200 shadow-inner'}`}>
+                    {analysisResult.is_valid_cv === false ? (
+                      <div className="text-center py-4">
+                        <div className="text-6xl mb-4 drop-shadow-md">🛑</div>
+                        <h4 className="text-2xl font-black text-red-600 mb-3 tracking-tight">Invalid Document Detected</h4>
+                        <p className="text-red-800 font-medium text-sm mb-6 max-w-md mx-auto leading-relaxed">{analysisResult.analysis}</p>
+                        <button onClick={() => setAnalysisResult(null)} className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-sm transition-all hover:scale-105 shadow-lg uppercase tracking-widest">
+                          Upload Real CV
                         </button>
-                      )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-5">
+                          <h4 className="text-xl font-black text-gray-800 tracking-tight">AI Profile Match</h4>
+                          <div className={`text-5xl font-black drop-shadow-sm ${analysisResult.ats_score > 75 ? 'text-green-500' : analysisResult.ats_score > 40 ? 'text-yellow-500' : 'text-red-500'}`}>
+                            {analysisResult.ats_score}<span className="text-2xl">%</span>
+                          </div>
+                        </div>
+                        
+                        {analysisResult.mismatch_alert && analysisResult.mismatch_alert.trim() !== "" && (
+                          <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-xl mb-6 shadow-sm">
+                            <p className="text-red-900 font-bold text-sm flex items-start gap-3">
+                              <span className="text-xl">⚠️</span> 
+                              <span className="leading-relaxed">{analysisResult.mismatch_alert}</span>
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="space-y-6">
+                          <div>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Comprehensive Analysis</p>
+                            <p className="text-[13px] font-medium text-gray-700 bg-white p-5 rounded-2xl shadow-sm leading-relaxed border border-gray-100 whitespace-pre-wrap">{analysisResult.analysis}</p>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Top Skills Extracted</p>
+                              <div className="flex flex-wrap gap-2">
+                                {analysisResult.top_skills?.map((s, i) => (
+                                  <span key={i} className="bg-white border border-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded shadow-sm">{s}</span>
+                                ))}
+                                {(!analysisResult.top_skills || analysisResult.top_skills.length === 0) && (
+                                  <span className="text-xs font-bold text-gray-500 italic bg-white p-2 rounded border border-dashed">No exact skills extracted.</span>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Experience Evaluated</p>
+                              <p className="text-[13px] font-bold text-gray-800 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 leading-relaxed">{analysisResult.experience_summary}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {analysisResult.is_valid_cv !== false && (
+                    <button
+                      onClick={finalSubmit}
+                      disabled={submittingApp}
+                      className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm hover:scale-[1.02] active:scale-95"
+                    >
+                      {submittingApp ? 'Submitting Application...' : 'Confirm & Apply Now'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+                    <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <h3 className="text-3xl font-black text-[#113253] mb-2">Application Successful!</h3>
+                  <p className="text-gray-500 font-medium mb-6">Your profile and analyzed CV have been submitted to the employer.</p>
+
+                  {analysisResult.suggested_roles && analysisResult.suggested_roles.length > 0 && (
+                    <div className="text-left mt-4 border-t border-gray-100 pt-6">
+                      <h4 className="text-lg font-extrabold text-[#113253] mb-3">Other Roles Matching Your CV:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResult.suggested_roles.map((srole, i) => (
+                          <span key={i} className="bg-gray-100 text-[#489895] px-3 py-1.5 rounded-full text-sm font-bold shadow-sm">{srole}</span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-4 font-medium italic">Explore these roles in our Jobs section for better chances!</p>
                     </div>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-10 animate-fadeIn">
-                  <div className="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner">✓</div>
-                  <h3 className="text-3xl font-black text-gray-800 mb-2">Application Sent!</h3>
-                  <p className="text-gray-600 mb-8 font-medium">Your profile has been shared with {selectedJob.company_name}. Good luck!</p>
-                  <button
-                    onClick={() => setSelectedJob(null)}
-                    className="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-colors shadow-lg"
-                  >
+
+                  <button onClick={() => { setSelectedJob(null); setAnalysisResult(null); setFinalSubmitSuccess(false); }} className="mt-8 w-full py-4 border-2 border-[#113253] text-[#113253] font-extrabold rounded-xl hover:bg-[#113253] hover:text-white transition-all uppercase tracking-wider text-sm">
                     Back to Jobs
                   </button>
                 </div>
               )}
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* View Doc Modal */}
+      {viewDocModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 ease-in-out p-4" onClick={() => setViewDocModal(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#113253] p-4 flex justify-between items-center shadow-md z-10 relative">
+              <h3 className="text-white font-extrabold text-lg tracking-widest uppercase flex items-center gap-2">
+                <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                Document Viewer
+              </h3>
+              <div className="flex items-center gap-2">
+                <a href={viewDocModal} download="Document" className="text-white hover:text-[#489895] transition-colors bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur font-bold text-sm flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Download
+                </a>
+                <button onClick={() => setViewDocModal(null)} className="text-white/70 hover:text-red-400 transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full backdrop-blur">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto bg-gray-50 flex items-center justify-center p-4">
+              {String(viewDocModal).startsWith('data:application/pdf') || String(viewDocModal).startsWith('data:text/') ? (
+                <iframe src={viewDocModal} className="w-full h-full rounded-xl border border-gray-200 shadow-inner bg-white" title="Document Viewer" />
+              ) : String(viewDocModal).startsWith('data:image') ? (
+                <img src={viewDocModal} className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-gray-200" alt="Document" />
+              ) : (
+                <div className="text-center p-8 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  </div>
+                  <p className="font-bold text-[#113253]">Preview Unavailable for this Format</p>
+                  <p className="text-sm text-gray-500 mt-2">Please click the Download button above to read the document (Word/Excel/etc) on your device.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
     </div>
   );
 };

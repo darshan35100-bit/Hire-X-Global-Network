@@ -552,8 +552,7 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash", 
       generationConfig: { 
-        temperature: 0.2,
-        responseMimeType: "application/json"
+        temperature: 0.2
       } 
     });
     const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Deeply analyze the provided PDF Document against the provided job description. 
@@ -574,7 +573,7 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     "experience_summary": Detailed string of EXACT total years of experience and key roles (e.g. "2 years as Frontend Developer").
     "mismatch_alert": Check if the name written inside the CV matches the 'Candidate Profile Registration Name'. If the names obviously DO NOT MATCH, output an alert string (e.g. "Warning: The name on the CV does not match your registered profile name."). If they match or no name is found, return an empty string "".
     
-    Output ONLY valid JSON.`;
+    Output ONLY raw valid JSON without any markdown formatting like \`\`\`json.`;
     
     let mimeType = "application/pdf";
     if (req.body.mimeType) {

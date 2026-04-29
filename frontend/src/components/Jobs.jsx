@@ -217,40 +217,40 @@ const Jobs = () => {
                       </div>
                     )}
                     <div>
-                      <h4 className="text-[16px] font-black text-[#0f2e26] leading-tight">{job.title}</h4>
-                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mt-1">{job.company_name}</p>
+                      <h4 className="text-[18px] font-black text-[#0f2e26] leading-tight">{job.title}</h4>
+                      <p className="text-[11px] font-black text-gray-600 uppercase tracking-widest mt-1">{job.company_name}</p>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center mb-3">
                     {job.qualification ? (
-                      <span className="bg-white/50 text-[#0f766e] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm border border-white/60">
+                      <span className="bg-white/60 text-[#0f766e] text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm border border-white/60">
                         {job.qualification}
                       </span>
                     ) : (
-                      <span className="bg-white/50 text-[#0f766e] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm border border-white/60">
+                      <span className="bg-white/60 text-[#0f766e] text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm border border-white/60">
                         Degree
                       </span>
                     )}
 
                     {job.official_notification && (
-                      <a href={job.official_notification} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[10px] font-bold text-gray-800 hover:text-emerald-700 transition-colors bg-white/40 px-2 py-1 rounded-md shadow-sm border border-white/50">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                      <button onClick={() => setViewDocModal(job.official_notification)} className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 hover:text-emerald-900 transition-colors bg-white/70 hover:bg-white px-2 py-1.5 rounded-md shadow-sm border border-emerald-100 cursor-pointer">
+                        <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         View Notification
-                      </a>
+                      </button>
                     )}
                   </div>
 
-                  <p className="text-xs text-gray-700 mb-5 line-clamp-3 leading-relaxed flex-grow">{job.description}</p>
+                  <p className="text-[13px] text-gray-700 mb-5 line-clamp-3 leading-relaxed flex-grow font-medium">{job.description}</p>
 
                   <div className="flex gap-2 mb-3 flex-wrap">
                     {job.location && (
-                      <span className="bg-white/40 text-[#0f766e] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm border border-white/50 flex items-center gap-1">
+                      <span className="bg-white/60 text-[#0f766e] text-[11px] font-bold px-2.5 py-1 rounded shadow-sm border border-white/60 flex items-center gap-1">
                         📍 {job.location}
                       </span>
                     )}
                     {job.years_experience && (
-                      <span className="bg-white/40 text-[#0f766e] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm border border-white/50 flex items-center gap-1">
+                      <span className="bg-white/60 text-[#0f766e] text-[11px] font-bold px-2.5 py-1 rounded shadow-sm border border-white/60 flex items-center gap-1">
                         ⏳ {job.years_experience} Exp
                       </span>
                     )}
@@ -258,7 +258,7 @@ const Jobs = () => {
 
                   {job.end_date && (
                     <div className="mb-4">
-                      <span className="bg-white/40 text-[#0f766e] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm border border-white/50 inline-flex items-center gap-1">
+                      <span className="bg-white/60 text-[#0f766e] text-[11px] font-bold px-2.5 py-1 rounded shadow-sm border border-white/60 inline-flex items-center gap-1">
                         📅 {formatUIStandardDate(job.end_date)}
                       </span>
                     </div>
@@ -266,7 +266,7 @@ const Jobs = () => {
 
                   <button
                     onClick={() => handleApplyClick(job)}
-                    className="w-full mt-auto py-2.5 rounded-xl bg-gradient-to-r from-[#34d399] to-[#059669] text-white font-black shadow-lg hover:shadow-xl hover:from-[#10b981] hover:to-[#047857] transition-all duration-300 active:scale-95 uppercase tracking-widest text-[10px] border border-white/30"
+                    className="w-full mt-auto py-3 rounded-xl bg-gradient-to-r from-[#34d399] to-[#059669] text-white font-black shadow-lg hover:shadow-xl hover:from-[#10b981] hover:to-[#047857] transition-all duration-300 active:scale-95 uppercase tracking-widest text-[11px] border border-white/30"
                   >
                     Apply Now
                   </button>
@@ -320,9 +320,15 @@ const Jobs = () => {
                         }}
                         className="hidden"
                       />
-                      <div className="text-5xl mb-4 drop-shadow-sm">📄</div>
-                      <p className="text-gray-800 font-bold mb-1 text-lg">Click to Upload CV (PDF)</p>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Max size 20MB</p>
+                      <div className="text-center mb-6">
+                        <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-500 rounded-full flex items-center justify-center p-[3px] shadow-[0_0_20px_rgba(236,72,153,0.5)] animate-[pulse_3s_infinite]">
+                          <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                            <span className="text-4xl bg-gradient-to-r from-pink-500 to-cyan-500 bg-clip-text text-transparent font-black">+</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-gray-800 font-bold mb-1 text-lg">Click to Upload CV</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">PDF format only (Max 20MB)</p>
                     </label>
                     {cvFile && (
                       <div className="mt-6 p-4 bg-emerald-100 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
@@ -393,13 +399,24 @@ const Jobs = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={finalSubmit}
-                    disabled={submittingApp}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm hover:scale-[1.02] active:scale-95"
-                  >
-                    {submittingApp ? 'Submitting Application...' : 'Confirm & Apply Now'}
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button
+                      onClick={() => {
+                        setSelectedJob(null);
+                        setAnalysisResult(null);
+                      }}
+                      className="flex-1 py-4 bg-white border-2 border-emerald-500 text-emerald-700 font-black rounded-xl hover:bg-emerald-50 transition-all shadow-sm uppercase tracking-widest text-xs"
+                    >
+                      Improve CV
+                    </button>
+                    <button
+                      onClick={finalSubmit}
+                      disabled={submittingApp}
+                      className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-xs"
+                    >
+                      {submittingApp ? 'Submitting...' : 'Apply Now'}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-6">

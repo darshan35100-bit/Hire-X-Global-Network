@@ -128,15 +128,8 @@ const Jobs = () => {
         }
         const aiData = await analyzeRes.json();
 
-        if (aiData.is_valid_cv === false) {
-          alert("Error: This document is NOT a valid CV or Resume. Please upload a real CV. ATS Score: 0");
-          setAnalysisResult(aiData);
-          setApplying(false);
-          return;
-        }
-
         if (aiData.mismatch_alert && aiData.mismatch_alert.length > 5) {
-          alert("PROFILE MISMATCH WARNING: \n\n" + aiData.mismatch_alert + "\n\nPlease ensure you upload your own CV.");
+          // Alert is shown inside the UI now
         }
 
         setAnalysisResult(aiData);
@@ -349,70 +342,64 @@ const Jobs = () => {
                 </div>
               ) : !finalSubmitSuccess ? (
                 <div className="space-y-6 animate-fadeIn">
-                  <div className={`p-6 rounded-3xl border ${analysisResult.is_valid_cv === false ? 'bg-red-50 border-red-300 shadow-sm' : 'bg-gray-50 border-gray-200 shadow-inner'}`}>
-                    {analysisResult.is_valid_cv === false ? (
-                      <div className="text-center py-4">
-                        <div className="text-6xl mb-4 drop-shadow-md">🛑</div>
-                        <h4 className="text-2xl font-black text-red-600 mb-3 tracking-tight">Invalid Document Detected</h4>
-                        <p className="text-red-800 font-medium text-sm mb-6 max-w-md mx-auto leading-relaxed">{analysisResult.analysis}</p>
-                        <button onClick={() => setAnalysisResult(null)} className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-sm transition-all hover:scale-105 shadow-lg uppercase tracking-widest">
-                          Upload Real CV
-                        </button>
+                  <div className={`p-6 rounded-3xl border ${analysisResult.ats_score === 0 ? 'bg-red-50 border-red-300 shadow-sm' : 'bg-gray-50 border-gray-200 shadow-inner'}`}>
+                    <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-5">
+                      <h4 className="text-xl font-black text-gray-800 tracking-tight">AI Profile Match</h4>
+                      <div className={`text-5xl font-black drop-shadow-sm ${analysisResult.ats_score > 75 ? 'text-green-500' : analysisResult.ats_score > 40 ? 'text-yellow-500' : 'text-red-500'}`}>
+                        {analysisResult.ats_score}<span className="text-2xl">%</span>
                       </div>
-                    ) : (
-                      <>
-                        <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-5">
-                          <h4 className="text-xl font-black text-gray-800 tracking-tight">AI Profile Match</h4>
-                          <div className={`text-5xl font-black drop-shadow-sm ${analysisResult.ats_score > 75 ? 'text-green-500' : analysisResult.ats_score > 40 ? 'text-yellow-500' : 'text-red-500'}`}>
-                            {analysisResult.ats_score}<span className="text-2xl">%</span>
-                          </div>
-                        </div>
-                        
-                        {analysisResult.mismatch_alert && analysisResult.mismatch_alert.trim() !== "" && (
-                          <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-xl mb-6 shadow-sm">
-                            <p className="text-red-900 font-bold text-sm flex items-start gap-3">
-                              <span className="text-xl">⚠️</span> 
-                              <span className="leading-relaxed">{analysisResult.mismatch_alert}</span>
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="space-y-6">
-                          <div>
-                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Comprehensive Analysis</p>
-                            <p className="text-[13px] font-medium text-gray-700 bg-white p-5 rounded-2xl shadow-sm leading-relaxed border border-gray-100 whitespace-pre-wrap">{analysisResult.analysis}</p>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Top Skills Extracted</p>
-                              <div className="flex flex-wrap gap-2">
-                                {analysisResult.top_skills?.map((s, i) => (
-                                  <span key={i} className="bg-white border border-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded shadow-sm">{s}</span>
-                                ))}
-                                {(!analysisResult.top_skills || analysisResult.top_skills.length === 0) && (
-                                  <span className="text-xs font-bold text-gray-500 italic bg-white p-2 rounded border border-dashed">No exact skills extracted.</span>
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Experience Evaluated</p>
-                              <p className="text-[13px] font-bold text-gray-800 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 leading-relaxed">{analysisResult.experience_summary}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </>
+                    </div>
+                    
+                    {analysisResult.ats_score === 0 && (
+                      <div className="bg-red-100 border-l-4 border-red-500 p-4 rounded mb-6 shadow-sm">
+                        <p className="text-red-900 font-bold text-sm flex items-center gap-2">
+                          <span className="text-lg">🛑</span> 
+                          <span>Warning: This document does not appear to be a valid CV for this job. However, you can still proceed to apply.</span>
+                        </p>
+                      </div>
                     )}
+
+                    {analysisResult.mismatch_alert && analysisResult.mismatch_alert.trim() !== "" && (
+                      <div className="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-xl mb-6 shadow-sm">
+                        <p className="text-orange-900 font-bold text-sm flex items-start gap-3">
+                          <span className="text-xl">⚠️</span> 
+                          <span className="leading-relaxed">{analysisResult.mismatch_alert}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Comprehensive Analysis</p>
+                        <p className="text-[13px] font-medium text-gray-700 bg-white p-5 rounded-2xl shadow-sm leading-relaxed border border-gray-100 whitespace-pre-wrap">{analysisResult.analysis}</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Top Skills Extracted</p>
+                          <div className="flex flex-wrap gap-2">
+                            {analysisResult.top_skills?.map((s, i) => (
+                              <span key={i} className="bg-white border border-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded shadow-sm">{s}</span>
+                            ))}
+                            {(!analysisResult.top_skills || analysisResult.top_skills.length === 0) && (
+                              <span className="text-xs font-bold text-gray-500 italic bg-white p-2 rounded border border-dashed">No exact skills extracted.</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 pl-1">Experience Evaluated</p>
+                          <p className="text-[13px] font-bold text-gray-800 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 leading-relaxed">{analysisResult.experience_summary}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {analysisResult.is_valid_cv !== false && (
-                    <button
-                      onClick={finalSubmit}
-                      disabled={submittingApp}
-                      className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm hover:scale-[1.02] active:scale-95"
-                    >
-                      {submittingApp ? 'Submitting Application...' : 'Confirm & Apply Now'}
-                    </button>
-                  )}
+                  <button
+                    onClick={finalSubmit}
+                    disabled={submittingApp}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm hover:scale-[1.02] active:scale-95"
+                  >
+                    {submittingApp ? 'Submitting Application...' : 'Confirm & Apply Now'}
+                  </button>
                 </div>
               ) : (
                 <div className="text-center py-6">

@@ -556,23 +556,25 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
         responseMimeType: "application/json"
       } 
     });
-    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Analyze the provided PDF Document against standard tech jobs (or the provided job description if any). 
+    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Deeply analyze the provided PDF Document against the provided job description. 
     Job Description: "${job_description || 'General Tech Role'}". 
-    Candidate Profile Registration Name/Details: "${profile_name || 'N/A'}".
+    Candidate Profile Registration Name: "${profile_name || 'N/A'}".
     
-    CRITICAL STEP 1: Determine if this document is a genuine CV/Resume. If it is a dummy PDF, a blank page, an image, a random article, or anything clearly NOT a CV/Resume, you MUST set "is_valid_cv" to false, "ats_score" to 0, and explain in "analysis" that the document is not a valid CV.
-    
-    CRITICAL STEP 2: If it IS a valid CV, evaluate it strictly and realistically just like a human HR professional. 
-    
+    SCORING CRITERIA:
+    - 85 to 100: Excellent match, high relevancy of skills and qualifications.
+    - 50 to 84: Moderate to good match, some relevant skills.
+    - 25 to 49: Weak match, very few relevant skills.
+    - 0: The document is COMPLETELY empty, or clearly NOT a CV/Resume at all (e.g., marks card, study certificate, random image).
+
     Provide your output STRICTLY in JSON format with the following exact keys. ALL TEXT MUST BE IN ENGLISH:
-    "is_valid_cv": Boolean (true if it's a real CV/Resume, false if it's a dummy or unrelated document).
-    "ats_score": Integer (15 to 100 for valid CVs based on strict ATS criteria, 0 ONLY if is_valid_cv is false).
-    "analysis": A massive, incredibly detailed, strictly factual paragraph (at least 8-10 long sentences) evaluating the candidate's precise qualifications, tools, frameworks, and gaps relative to the role. Act as a critical human HR evaluator. Do not write generic text; strictly use facts from the CV.
-    "suggested_roles": Array of 3 job titles matching the CV facts.
-    "top_skills": Array of factual skills EXACTLY extracted from the CV text. DO NOT HALLUCINATE OR INVENT SKILLS. If a skill is not written in the CV, do not include it.
-    "experience_summary": Detailed string of EXACT total years of experience and key roles exactly as written in the CV. Do not invent experience.
-    "mismatch_alert": Check if the name/details in the CV match the 'Candidate Profile Registration Name/Details'. If the CV belongs to someone else (different name/details), provide a string explaining EXACTLY what mismatched (e.g. "The name on the CV does not match your registered profile name."). If they match, return an empty string "".
-    Do not include markdown tags like \`\`\`json, just output the raw JSON sequence.`;
+    "ats_score": Integer (0 to 100 based on the strict criteria above).
+    "analysis": A MASSIVE, incredibly detailed, strictly factual paragraph (at least 8-15 long sentences). Deeply explain exactly WHY the CV matched or did not match the job. If the document is not a CV, explain exactly what it is and why the score is 0. NEVER write generic text; analyze the exact content of the document.
+    "suggested_roles": Array of 3 job titles matching the document facts (leave empty if not a CV).
+    "top_skills": Array of factual skills EXACTLY extracted from the document text. DO NOT HALLUCINATE OR INVENT SKILLS.
+    "experience_summary": Detailed string of EXACT total years of experience and key roles (e.g. "2 years as Frontend Developer").
+    "mismatch_alert": Check if the name written inside the CV matches the 'Candidate Profile Registration Name'. If the names obviously DO NOT MATCH, output an alert string (e.g. "Warning: The name on the CV does not match your registered profile name."). If they match or no name is found, return an empty string "".
+    
+    Output ONLY valid JSON.`;
     
     let mimeType = "application/pdf";
     if (req.body.mimeType) {
@@ -591,7 +593,7 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error("CV Analysis Error:", err);
-    res.json({ is_valid_cv: false, ats_score: 0, analysis: "ERROR: This document could not be analyzed or is not a recognizable CV/Resume. Please upload a valid, clear text-based PDF CV.", suggested_roles: [], top_skills: [], experience_summary: "N/A", mismatch_alert: "" });
+    res.json({ ats_score: 0, analysis: "ERROR: This document could not be analyzed. Please upload a valid, clear text-based PDF CV.", suggested_roles: [], top_skills: [], experience_summary: "N/A", mismatch_alert: "" });
   }
 });
 

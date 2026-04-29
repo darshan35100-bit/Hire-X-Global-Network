@@ -481,8 +481,7 @@ const AdminDashboard = () => {
                            <div className="flex flex-col gap-2">
                              {userDetails.feedbacks.map(f => (
                                <div key={f.id} className="bg-white/80 p-3 rounded-xl border border-gray-100 flex justify-between items-center text-sm shadow-sm">
-                                 <span className="truncate max-w-[70%] font-medium text-gray-700">"{f.text}"</span>
-                                 <button onClick={()=>deleteItem('feedback', f.id)} className="bg-red-50 text-red-600 hover:bg-red-500 hover:text-white px-3 py-1 rounded-lg text-[10px] uppercase font-bold transition-colors ml-2 shadow-sm">Delete</button>
+                                 <span className="truncate max-w-[90%] font-medium text-gray-700">"{f.text}"</span>
                                </div>
                              ))}
                              {userDetails.feedbacks.length === 0 && <p className="text-xs text-gray-400 italic">No feedbacks submitted.</p>}
@@ -508,7 +507,6 @@ const AdminDashboard = () => {
                       <p className="text-xs text-gray-500 mb-2">{new Date(f.created_at).toLocaleDateString()}</p>
                       <p className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-100">{f.text}</p>
                     </div>
-                    <button onClick={() => deleteItem('feedback', f.id)} className="text-red-500 hover:bg-red-50 p-2 rounded">Delete</button>
                  </div>
                ))}
             </div>

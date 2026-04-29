@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://hire-x-global-network.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

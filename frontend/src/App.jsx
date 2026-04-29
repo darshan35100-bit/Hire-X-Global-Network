@@ -124,14 +124,18 @@ function App() {
                 {user ? (
                   <div className="flex items-center space-x-6">
                     <NavLink to="/profile" className={({ isActive }) => `flex items-center space-x-3 group py-1 border-b-[3px] transition-all duration-300 ${isActive ? 'border-[#489895]' : 'border-transparent'}`}>
-                      <div className={`w-10 h-10 rounded-full bg-gray-200 border-2 shadow-md overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-[#806bf8] transition-all ${isActive ? 'border-[#489895] ring-2 ring-[#489895]' : 'border-white'}`}>
-                        {user.avatar ? (
-                          <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
-                        ) : (
-                          <span className="font-extrabold text-[#113253]">{user.name.charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <span className={`font-bold transition-colors ${isActive ? 'text-[#489895]' : 'text-[#489895] group-hover:text-[#806bf8]'}`}>Hi, {user.name.split(' ')[0]}</span>
+                      {({ isActive }) => (
+                        <>
+                          <div className={`w-10 h-10 rounded-full bg-gray-200 border-2 shadow-md overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-[#806bf8] transition-all ${isActive ? 'border-[#489895] ring-2 ring-[#489895]' : 'border-white'}`}>
+                            {user.avatar ? (
+                              <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                            ) : (
+                              <span className="font-extrabold text-[#113253]">{user.name.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <span className={`font-bold transition-colors ${isActive ? 'text-[#489895]' : 'text-[#489895] group-hover:text-[#806bf8]'}`}>Hi, {user.name.split(' ')[0]}</span>
+                        </>
+                      )}
                     </NavLink>
                     <button onClick={logout} className="px-5 py-2.5 bg-red-500 text-white font-extrabold rounded shadow-md hover:bg-red-600 transition-all duration-300 transform hover:-translate-y-2 hover:brightness-75 hover:shadow-lg text-sm uppercase tracking-wider">
                       Logout
@@ -173,10 +177,14 @@ function App() {
                 {user ? (
                   <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col space-y-3">
                     <NavLink to="/profile" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-[#e2f0ef] border-l-4 border-[#489895]' : ''}`}>
-                      <div className={`w-10 h-10 rounded-full bg-gray-200 shadow-sm flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-[#489895]' : 'border-gray-300'}`}>
-                        {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" /> : <span className="font-bold">{user.name.charAt(0)}</span>}
-                      </div>
-                      <span className={`font-bold ${isActive ? 'text-[#489895]' : 'text-[#489895]'}`}>My Profile</span>
+                      {({ isActive }) => (
+                        <>
+                          <div className={`w-10 h-10 rounded-full bg-gray-200 shadow-sm flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-[#489895]' : 'border-gray-300'}`}>
+                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" /> : <span className="font-bold">{user.name.charAt(0)}</span>}
+                          </div>
+                          <span className={`font-bold ${isActive ? 'text-[#489895]' : 'text-[#489895]'}`}>My Profile</span>
+                        </>
+                      )}
                     </NavLink>
                     <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="mx-3 mt-2 px-5 py-3 bg-red-500 text-white font-bold rounded-lg text-left">Logout</button>
                   </div>

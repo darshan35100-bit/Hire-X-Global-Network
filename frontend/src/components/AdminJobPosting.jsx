@@ -95,37 +95,37 @@ const AdminJobPosting = () => {
   if (!user) return null;
 
   // Modern Styled Classes
-  const cardStyle = "bg-white/70 backdrop-blur-2xl border border-white/80 rounded-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] overflow-hidden";
+  const cardStyle = "bg-gradient-to-br from-cyan-100/80 via-teal-100/70 to-emerald-50/80 backdrop-blur-3xl border border-teal-200/60 rounded-[40px] shadow-[0_25px_50px_-12px_rgba(0,128,128,0.2)] overflow-hidden";
   const inputWrapper = "relative group";
-  const labelStyle = "flex items-center gap-2 text-[12px] font-black text-[#1a3a34]/70 mb-2 uppercase tracking-widest ml-2";
-  const inputStyle = "w-full bg-white/50 border-2 border-emerald-100/50 rounded-2xl py-4 px-5 focus:border-emerald-400 focus:bg-white outline-none transition-all duration-300 font-bold text-gray-700 shadow-sm group-hover:shadow-md pr-12";
-  const iconStyle = "absolute right-5 top-[48px] text-emerald-300 group-focus-within:text-emerald-500 transition-colors duration-300 text-lg";
+  const labelStyle = "flex items-center gap-2 text-[12px] font-black text-[#1a3a34]/80 mb-2 uppercase tracking-widest ml-2";
+  const inputStyle = "w-full bg-white/40 border-2 border-teal-200/50 rounded-2xl py-4 px-5 focus:border-teal-400 focus:bg-white/70 outline-none transition-all duration-300 font-bold text-gray-800 shadow-sm group-hover:shadow-md pr-12 backdrop-blur-sm";
+  const iconStyle = "absolute right-5 top-[48px] text-teal-500 group-focus-within:text-teal-700 transition-colors duration-300 text-lg";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f0fcf9] via-[#e6f7f2] to-[#f5fffb] py-16 px-4 flex flex-col items-center font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#e0fbfc] via-[#e6f7f2] to-[#dff6f0] py-16 px-4 flex flex-col items-center font-sans relative overflow-hidden">
 
       {/* Soft Floating Bubbles / Water Drops */}
-      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-emerald-200/30 rounded-full blur-[100px] animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-[120px]"></div>
+      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-cyan-300/30 rounded-full blur-[100px] animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-teal-300/30 rounded-full blur-[120px]"></div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 right-10 opacity-10 rotate-12 transition-transform hover:scale-110"><FaLeaf size={100} className="text-emerald-900" /></div>
+      <div className="absolute top-20 right-10 opacity-10 rotate-12 transition-transform hover:scale-110"><FaLeaf size={100} className="text-teal-900" /></div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center relative z-10">
         <h2 className="text-5xl md:text-6xl font-black text-[#1a3a34] tracking-tight mb-4">
-          Launch a <span className="text-emerald-600">Career</span>
+          Launch a <span className="text-teal-600">Career</span>
         </h2>
-        <div className="flex items-center justify-center gap-2 text-emerald-800/40 font-black uppercase tracking-[0.4em] text-[10px]">
-          <div className="h-[2px] w-8 bg-emerald-200"></div>
+        <div className="flex items-center justify-center gap-2 text-teal-800/50 font-black uppercase tracking-[0.4em] text-[10px]">
+          <div className="h-[2px] w-8 bg-teal-300"></div>
           Professional Job Portal
-          <div className="h-[2px] w-8 bg-emerald-200"></div>
+          <div className="h-[2px] w-8 bg-teal-300"></div>
         </div>
       </motion.div>
 
       <div className="w-full max-w-5xl relative z-10">
         <div className={cardStyle}>
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-8 border-b border-white/50 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-cyan-500/20 to-teal-500/20 p-8 border-b border-teal-200/50 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="bg-white p-4 rounded-2xl shadow-sm text-emerald-600"><FaBriefcase size={24} /></div>
               <div>
@@ -263,8 +263,8 @@ const AdminJobPosting = () => {
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label className={labelStyle}>Detailed Description <span className="text-emerald-400">*</span></label>
-                <textarea rows={5} required className="w-full bg-white/50 border-2 border-emerald-100/50 rounded-[30px] py-6 px-8 focus:border-emerald-400 focus:bg-white outline-none transition-all font-bold text-gray-700 shadow-sm resize-none" placeholder="Explain the role, salary, and requirements..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                <label className={labelStyle}>Detailed Description <span className="text-teal-400">*</span></label>
+                <textarea rows={5} required className="w-full bg-white/40 border-2 border-teal-200/50 rounded-[30px] py-6 px-8 focus:border-teal-400 focus:bg-white/70 outline-none transition-all font-bold text-gray-800 shadow-sm resize-none backdrop-blur-sm" placeholder="Explain the role, salary, and requirements..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
             </div>
 

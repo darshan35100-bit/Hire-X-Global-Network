@@ -62,16 +62,16 @@ const Home = () => {
 
   const scrollVelocity = useVelocity(scrollY);
   const smoothVelocity = useSpring(scrollVelocity, { damping: 50, stiffness: 400 });
-  const velocityBlur = useTransform(smoothVelocity, [-1000, 0, 1000], [10, 0, 10]);
+  const velocityBlur = useTransform(smoothVelocity, [-1000, 0, 1000], [2, 0, 2]);
   const blurFilterValue = useTransform(velocityBlur, v => `blur(${v}px)`);
 
   const sectionVariants = {
-    hidden: { opacity: 0, y: 50, filter: 'blur(20px)' },
+    hidden: { opacity: 0, y: 50, filter: 'blur(2px)' },
     visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: "easeOut", staggerChildren: 0.1 } }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30, filter: 'blur(20px)' },
+    hidden: { opacity: 0, y: 30, filter: 'blur(2px)' },
     visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: "easeOut" } }
   };
 
@@ -81,6 +81,7 @@ const Home = () => {
   const [searchError, setSearchError] = useState('');
   const [analyzingMap, setAnalyzingMap] = useState({});
   const [feedbacks, setFeedbacks] = useState([]);
+  const [articles, setArticles] = useState([]);
   const [showAllFeedbacks, setShowAllFeedbacks] = useState(false);
   const [expandedFeedbackId, setExpandedFeedbackId] = useState(null);
   const navigate = useNavigate();
@@ -111,6 +112,7 @@ const Home = () => {
   useEffect(() => {
     fetchJobs();
     fetchFeedbacks();
+    fetchArticles();
     const handleFeedbackUpdate = () => fetchFeedbacks();
     window.addEventListener('feedback_updated', handleFeedbackUpdate);
     return () => window.removeEventListener('feedback_updated', handleFeedbackUpdate);
@@ -120,6 +122,17 @@ const Home = () => {
     fetch('/api/feedbacks')
       .then(res => res.json())
       .then(data => setFeedbacks(data))
+      .catch(console.error);
+  };
+
+  const fetchArticles = () => {
+    fetch('/api/articles')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setArticles(data.reverse().slice(0, 3));
+        }
+      })
       .catch(console.error);
   };
 
@@ -250,21 +263,6 @@ const Home = () => {
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-40 mb-32">
 
-        <motion.section initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={sectionVariants}>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {['Design & Creative', 'Software Engineering', 'Financial Services', 'Marketing & SEO', 'Operations'].map((cat) => (
-              <motion.button variants={itemVariants} key={cat} onClick={() => navigate(`/jobs?category=${cat}`)}
-                className="bg-white/60 backdrop-blur-md border border-gray-200/50 hover:border-[#806bf8] px-8 py-4 rounded-full font-bold text-[#113253] shadow-md hover:shadow-xl hover:-translate-y-2 hover:brightness-95 transition-all duration-300 text-sm tracking-wide">
-                {cat}
-              </motion.button>
-            ))}
-            <motion.button variants={itemVariants} onClick={() => navigate('/jobs')}
-              className="bg-gradient-to-r from-[#489895] to-[#4facfe] text-white px-8 py-4 rounded-full font-extrabold shadow-md hover:shadow-xl hover:-translate-y-2 hover:brightness-90 transition-all duration-300 text-sm tracking-wider flex items-center gap-2">
-              All Categories <span className="bg-white/20 p-1 rounded-full"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg></span>
-            </motion.button>
-          </div>
-        </motion.section>
-
         {/* 2. Central Process Flow - UPDATED ATTRACTIVE GRADIENT TEXTS */}
         <motion.section initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={sectionVariants}>
           <div className="text-center mb-16">
@@ -298,50 +296,6 @@ const Home = () => {
               </motion.div>
             ))}
           </div>
-        </motion.section>
-
-        <motion.section initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={sectionVariants}>
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-black text-[#113253] mb-4 tracking-tight">Spotlight Opportunities</h2>
-              <p className="text-gray-500 font-medium">Premium roles matched with bleeding-edge technology.</p>
-            </div>
-            {displayJobs.length > 0 && (
-              <Link to="/jobs" className="hidden md:inline-flex items-center gap-2 text-[#489895] font-extrabold pb-1 border-b-2 border-[#489895] hover:text-[#113253] hover:border-[#113253] transition-colors uppercase text-sm tracking-widest mt-4">
-                View All Jobs →
-              </Link>
-            )}
-          </div>
-          {displayJobs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {displayJobs.map((job, idx) => (
-                <motion.div variants={itemVariants} key={job.id || idx} className="bg-white/70 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[32px] p-8 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all group flex flex-col relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#806bf8]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="flex justify-between items-start mb-6 relative z-10">
-                    <div className="p-3 bg-gray-50 border border-gray-100 rounded-2xl"><span className="text-3xl grayscale group-hover:grayscale-0 transition-all filter-none opacity-80">💼</span></div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#489895] bg-[#e2f0ef] px-3 py-1.5 rounded-full">Active</span>
-                  </div>
-                  <h4 className="text-2xl font-black text-[#113253] mb-2 leading-tight group-hover:text-[#806bf8] transition-colors relative z-10">{job.title}</h4>
-                  <p className="text-xs font-bold text-gray-500 mb-6 bg-gray-100 py-1 px-3 rounded-md w-max relative z-10 border border-gray-200/50">{job.qualification}</p>
-                  <p className="text-gray-500 text-[14px] line-clamp-3 leading-relaxed mb-8 flex-grow font-medium relative z-10">{job.description}</p>
-                  <div className="flex flex-wrap gap-2 mb-8 relative z-10">
-                    {job.location && <span className="bg-white border border-gray-100 shadow-sm text-gray-600 text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1"><span className="opacity-50">📍</span> {job.location}</span>}
-                    {job.years_experience && <span className="bg-white border border-gray-100 shadow-sm text-gray-600 text-[11px] font-extrabold px-3 py-1.5 rounded-full flex items-center gap-1"><span className="opacity-50">⏳</span> {job.years_experience}+ Yrs</span>}
-                  </div>
-                  <button onClick={() => handleApply(job.id)} disabled={analyzingMap[job.id]} className="mt-auto w-full py-4 bg-[#f8fafc] text-[#113253] font-black rounded-2xl group-hover:bg-[#113253] group-hover:text-white transition-all uppercase tracking-widest text-[11px] md:text-xs shadow-sm relative z-10 disabled:opacity-75 disabled:cursor-wait">
-                    {analyzingMap[job.id] ? 'Analyzing CV...' : 'Submit Application'}
-                  </button>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <motion.div variants={itemVariants} className="py-20 px-8 text-center bg-gradient-to-br from-white to-[#f0f9ff]/70 backdrop-blur-xl border border-dashed border-[#489895] rounded-[32px] shadow-sm flex flex-col justify-center items-center">
-              <div className="w-20 h-20 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner animate-pulse">🔭</div>
-              <h3 className="text-[#113253] font-black text-2xl md:text-3xl mb-3">No Open Roles Temporarily</h3>
-              <p className="text-gray-500 font-medium max-w-lg mx-auto mb-8 leading-relaxed">Currently, no roles match the visionary criteria.</p>
-              <button onClick={() => { setSearchTitle(''); setSearchCity(''); navigate('/jobs'); }} className="px-8 py-4 bg-[#113253] text-white font-extrabold rounded-2xl shadow-lg hover:shadow-2xl transition-all text-sm tracking-wide">Explore All Available Roles</button>
-            </motion.div>
-          )}
         </motion.section>
 
         <motion.section initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.1 }} variants={sectionVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -392,28 +346,26 @@ const Home = () => {
             <Link to="/articles" className="inline-flex items-center gap-2 mt-6 md:mt-0 bg-white/50 border border-gray-200 text-[#113253] font-bold px-8 py-4 rounded-full text-sm tracking-wide transition-all">Explore All Articles</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { tag: 'Frontend Tech', title: 'The Evolution of React & Next.js in 2026', desc: 'Discover frameworks reshaping software delivery.', read: '5 min read', date: 'Oct 12', img: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80' },
-              { tag: 'System Design', title: 'Architecting for the Next Billion Users', desc: 'Deep dive into distributed systems scaling.', read: '8 min read', date: 'Oct 08', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80' },
-              { tag: 'Design Systems', title: 'Mastering Modern UI/UX Workflows', desc: 'Integrating glassmorphism and bento grids.', read: '4 min read', date: 'Sep 29', img: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80' }
-            ].map((article, idx) => (
+            {articles.length > 0 ? articles.map((article, idx) => (
               <Link to="/articles" key={idx} className="block">
                 <motion.div variants={itemVariants} className="group relative flex flex-col h-[500px] rounded-[32px] overflow-hidden bg-white shadow-sm transition-all">
-                  <div className="absolute top-0 left-0 w-full h-[65%] bg-cover bg-center group-hover:scale-105 transition-transform" style={{ backgroundImage: `url('${article.img}')` }} />
+                  <div className="absolute top-0 left-0 w-full h-[65%] bg-cover bg-center group-hover:scale-105 transition-transform" style={{ backgroundImage: `url('${article.image_url || 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80'}')` }} />
                   <div className="absolute bottom-2 left-2 right-2 top-[45%] flex flex-col">
                     <div className="h-full bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[26px] p-6 flex flex-col transition-all group-hover:bg-white/90">
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-[#806bf8] bg-[#f0ecfc] font-black uppercase tracking-widest text-[10px] px-3 py-1.5 rounded-full">{article.tag}</span>
-                        <span className="text-gray-500 font-bold text-[11px]">{article.date} · {article.read}</span>
+                        <span className="text-[#806bf8] bg-[#f0ecfc] font-black uppercase tracking-widest text-[10px] px-3 py-1.5 rounded-full">{article.category || 'Insights'}</span>
+                        <span className="text-gray-500 font-bold text-[11px]">Recent · {article.read_time || '5 min read'}</span>
                       </div>
                       <h4 className="font-extrabold text-[#113253] text-xl leading-tight mb-3 line-clamp-2">{article.title}</h4>
-                      <p className="text-gray-500 font-medium text-sm line-clamp-2 mb-4 flex-grow">{article.desc}</p>
+                      <p className="text-gray-500 font-medium text-sm line-clamp-2 mb-4 flex-grow">{article.description}</p>
                       <div className="mt-auto flex items-center gap-2 text-[#113253] font-bold text-sm border-t border-gray-200/50 pt-4">Read Full Article →</div>
                     </div>
                   </div>
                 </motion.div>
               </Link>
-            ))}
+            )) : (
+              <p className="col-span-3 text-center text-gray-500 font-medium py-10">No recent articles found. Stay tuned!</p>
+            )}
           </div>
         </motion.section>
       </div>

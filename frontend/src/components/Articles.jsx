@@ -123,31 +123,31 @@ const Articles = () => {
 
   const filteredArticles = filter === 'All' ? articles : articles.filter(a => a.category === filter);
 
-  // Background decoration (Soft Green accents)
-  const NatureDecor = () => (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-20">
-      <motion.div animate={{ rotate: [0, 5, 0] }} transition={{ duration: 12, repeat: Infinity }} className="absolute -left-10 top-0">
-        <svg width="300" height="600" viewBox="0 0 100 200" fill="none" className="text-emerald-300">
-          <path d="M10 0C10 50 40 80 10 130C-20 180 10 200 10 200" stroke="currentColor" strokeWidth="1" strokeDasharray="5 5" />
-          <circle cx="15" cy="40" r="8" fill="currentColor" />
-        </svg>
-      </motion.div>
-    </div>
-  );
-
-  const inputStyle = "w-full bg-white border border-cyan-100 rounded-2xl py-4 px-6 outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-50 font-bold text-gray-700 transition-all";
+  const inputStyle = "w-full bg-white/60 backdrop-blur-sm border border-cyan-200 rounded-2xl py-4 px-6 outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-300/30 font-bold text-cyan-900 transition-all placeholder-cyan-700/50 shadow-inner";
 
   return (
-    <div className="w-full bg-[#f0f9f6] min-h-screen relative overflow-hidden pb-32 font-sans">
-      <NatureDecor />
+    <div className="w-full min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-pink-50 relative overflow-hidden font-sans pb-32">
+      {/* Background Graphic */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none mix-blend-multiply opacity-20">
+        <img src="/steampunk_clock_bg.png" alt="Background" className="absolute w-full h-full object-cover" />
+      </div>
+      
+      {/* Vibrant RGB Glowing Orbs for "fancy design" */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-cyan-400 rounded-full mix-blend-multiply filter blur-[150px] opacity-40 animate-pulse"></div>
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-pink-400 rounded-full mix-blend-multiply filter blur-[150px] opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-300 rounded-full mix-blend-multiply filter blur-[200px] opacity-30"></div>
 
-      <div className="max-w-7xl mx-auto px-6 py-24 relative z-10">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
-          <span className="bg-white border border-emerald-100 text-emerald-600 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-sm mb-6 inline-block">
-            Deep Dive Into Tech
-          </span>
-          <h1 className="text-5xl md:text-7xl font-black text-[#1a2e29] mb-8 tracking-tighter">
-            Digital <span className="text-emerald-600 italic">Journal</span>
+      <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+        
+        {/* Central Title */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10 relative">
+          <div className="mb-4">
+            <span className="inline-block bg-white/60 border border-cyan-300 text-cyan-800 px-6 py-2 rounded-full text-xs font-extrabold tracking-[0.2em] uppercase backdrop-blur-md shadow-sm">
+              Deep Dive Into Tech
+            </span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 relative inline-block tracking-tight drop-shadow-lg pb-2">
+            Digital Journal
           </h1>
 
           {isMainAdmin && (
@@ -159,7 +159,7 @@ const Articles = () => {
                 setFormData({ title: '', category: 'Tech News', description: '', content: '', read_time: '5 min read', image_url: '' });
                 setShowAdminModal(true);
               }}
-              className="bg-[#183c31] text-white px-12 py-4 rounded-[20px] font-bold shadow-xl flex items-center gap-3 mx-auto text-xs uppercase tracking-widest"
+              className="mt-8 bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-500 text-white px-12 py-3 rounded-[20px] font-black shadow-[0_10px_20px_rgba(0,255,255,0.3)] flex items-center gap-3 mx-auto text-xs uppercase tracking-widest hover:shadow-[0_15px_30px_rgba(0,255,255,0.5)] transition-all border border-cyan-300"
             >
               + Create New Post
             </motion.button>
@@ -167,65 +167,75 @@ const Articles = () => {
         </motion.div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-20">
+        <div className="flex flex-wrap justify-center gap-4 mb-16 relative z-10">
           {['All', 'Interview Tips', 'Career Guidance', 'Tech News'].map(cat => (
-            <button
-              key={cat}
+            <button 
+              key={cat} 
               onClick={() => setFilter(cat)}
-              className={`px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all border ${filter === cat ? 'bg-emerald-600 text-white border-transparent shadow-lg' : 'bg-white text-emerald-300 border-emerald-50 hover:bg-emerald-50'}`}
+              className={`px-8 py-3 rounded-full text-xs font-black tracking-[0.1em] uppercase transition-all duration-300 border backdrop-blur-md
+                ${filter === cat 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white border-pink-400 shadow-[0_10px_20px_rgba(255,105,180,0.4)] transform -translate-y-1' 
+                  : 'bg-white/60 text-cyan-900 border-cyan-200 hover:bg-white hover:text-pink-600 shadow-sm hover:shadow-md'
+                }`}
             >
               {cat}
             </button>
           ))}
         </div>
 
-        {/* Articles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {/* Articles Grid - Aqua Gradient Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
           {filteredArticles.map((article, index) => (
-            <motion.div layout key={article.id} className="group bg-white/80 backdrop-blur-md rounded-[40px] border border-white p-4 shadow-[0_20px_50px_rgba(0,0,0,0.02)] hover:shadow-2xl transition-all h-full flex flex-col">
-              <div className="h-56 w-full rounded-[30px] overflow-hidden relative cursor-pointer" onClick={() => setSelectedArticle(article)}>
-                <img src={article.image_url || placeholderImages[index % placeholderImages.length]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/20 to-transparent"></div>
-                {isMainAdmin && (
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); setEditMode(true); setFormData(article); setImagePreview(article.image_url); setShowAdminModal(true); }} className="bg-white/90 p-2 rounded-xl text-cyan-600 shadow-sm hover:text-cyan-400"><FaPen size={14} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }} className="bg-white/90 p-2 rounded-xl text-red-400 shadow-sm hover:text-red-500"><FaTrash size={14} /></button>
-                  </div>
-                )}
-              </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-emerald-600 font-black text-[9px] uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-lg">{article.category}</span>
-                  <span className="text-gray-300 font-bold text-[9px] flex items-center gap-1"><FaClock /> {article.read_time}</span>
+            <motion.div layout key={article.id} className="group bg-gradient-to-br from-cyan-100/90 via-teal-50/90 to-cyan-200/90 backdrop-blur-2xl rounded-3xl border-2 border-white/60 overflow-hidden shadow-[0_10px_40px_rgba(0,200,255,0.15)] hover:shadow-[0_20px_50px_rgba(0,200,255,0.3)] hover:border-cyan-300 transition-all duration-500 flex flex-col h-full cursor-pointer transform hover:-translate-y-2" onClick={() => setSelectedArticle(article)}>
+              <div className="p-3">
+                <div className="rounded-2xl overflow-hidden aspect-[16/10] bg-cyan-900/10 relative shadow-inner">
+                  <img src={article.image_url || placeholderImages[index % placeholderImages.length]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/60 via-transparent to-transparent opacity-80"></div>
+                  
+                  {isMainAdmin && (
+                    <div className="absolute top-4 right-4 flex gap-2 z-10">
+                      <button onClick={(e) => { e.stopPropagation(); setEditMode(true); setFormData(article); setImagePreview(article.image_url); setShowAdminModal(true); }} className="bg-white/90 backdrop-blur p-2 rounded-xl text-cyan-600 shadow-lg hover:text-cyan-800 hover:bg-white"><FaPen size={14} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }} className="bg-white/90 backdrop-blur p-2 rounded-xl text-red-500 shadow-lg hover:text-red-700 hover:bg-white"><FaTrash size={14} /></button>
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-xl font-black text-[#1a2e29] mb-3 leading-tight line-clamp-2 cursor-pointer" onClick={() => setSelectedArticle(article)}>{article.title}</h3>
-                <p className="text-gray-400 text-sm line-clamp-3 mb-6 flex-grow">{article.description}</p>
-                <button onClick={() => setSelectedArticle(article)} className="w-full py-4 rounded-2xl bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2">
-                  Read More <FaArrowRight />
-                </button>
+              </div>
+              <div className="p-6 flex flex-col flex-grow relative">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-pink-600 font-black text-[9px] uppercase tracking-widest bg-pink-100 border border-pink-200 px-3 py-1 rounded-lg shadow-sm">{article.category}</span>
+                  <span className="text-cyan-800 font-bold text-[10px] flex items-center gap-1 bg-white/50 px-2 py-1 rounded-md"><FaClock /> {article.read_time}</span>
+                </div>
+                <h3 className="text-2xl font-black text-cyan-950 mb-3 leading-tight line-clamp-2 group-hover:text-purple-600 transition-colors drop-shadow-sm">{article.title}</h3>
+                <p className="text-cyan-800/80 text-sm line-clamp-3 mb-6 flex-grow font-medium">{article.description}</p>
+                <div className="w-full py-3.5 rounded-xl bg-white/60 text-cyan-700 font-black text-[10px] uppercase tracking-[0.2em] group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:via-teal-400 group-hover:to-cyan-500 group-hover:text-white shadow-sm group-hover:shadow-[0_10px_20px_rgba(0,255,255,0.4)] transition-all duration-300 flex items-center justify-center gap-2 border border-white">
+                  Read Article <FaArrowRight />
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
       </div>
 
-      {/* Reader Modal */}
+      {/* Reader Modal (Light Vibrant RGB Theme) */}
       <AnimatePresence>
         {selectedArticle && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-emerald-900/20 backdrop-blur-xl" onClick={() => setSelectedArticle(null)}>
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-4xl bg-white rounded-[50px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative">
-              <div className="h-72 w-full relative">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-cyan-950/30 backdrop-blur-xl" onClick={() => setSelectedArticle(null)}>
+            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-4xl bg-white/80 backdrop-blur-3xl border-2 border-white/60 rounded-[40px] shadow-[0_20px_70px_rgba(0,150,255,0.2)] overflow-hidden flex flex-col max-h-[90vh] relative">
+              <div className="h-80 w-full relative">
                 <img src={selectedArticle.image_url || placeholderImages[0]} alt="" className="w-full h-full object-cover" />
-                <button onClick={() => setSelectedArticle(null)} className="absolute top-6 right-6 w-12 h-12 bg-white/90 rounded-2xl flex items-center justify-center text-emerald-600 hover:bg-white shadow-lg"><FaTimes /></button>
+                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent"></div>
+                <button onClick={() => setSelectedArticle(null)} className="absolute top-6 right-6 w-12 h-12 bg-white/90 backdrop-blur rounded-2xl flex items-center justify-center text-cyan-600 hover:bg-white hover:text-pink-500 hover:scale-110 transition-all shadow-xl z-10"><FaTimes size={20} /></button>
               </div>
-              <div className="p-8 md:p-16 overflow-y-auto">
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest">{selectedArticle.category}</span>
-                  <span className="text-gray-400 font-bold text-xs">{selectedArticle.read_time}</span>
-                </div>
-                <h2 className="text-3xl md:text-5xl font-black text-[#1a2e29] mb-8 leading-tight">{selectedArticle.title}</h2>
-                <div className="text-gray-600 text-lg leading-relaxed whitespace-pre-line font-medium border-t border-emerald-50 pt-8">
-                  {selectedArticle.content || selectedArticle.description}
+              <div className="p-8 md:p-12 overflow-y-auto relative z-10 -mt-20">
+                <div className="bg-white/70 backdrop-blur-2xl border border-white p-8 md:p-10 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.05)]">
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="bg-gradient-to-r from-pink-400 to-purple-500 text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md">{selectedArticle.category}</span>
+                    <span className="text-cyan-700 font-bold text-xs flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-lg"><FaClock /> {selectedArticle.read_time}</span>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900 to-purple-900 mb-8 leading-tight drop-shadow-sm">{selectedArticle.title}</h2>
+                  <div className="text-cyan-900 text-lg leading-relaxed whitespace-pre-line font-medium border-t border-cyan-100 pt-8">
+                    {selectedArticle.content || selectedArticle.description}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -233,30 +243,31 @@ const Articles = () => {
         )}
       </AnimatePresence>
 
-      {/* Admin Post Modal */}
+      {/* Admin Post Modal (Light Vibrant RGB Theme) */}
       <AnimatePresence>
         {showAdminModal && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-emerald-950/20 backdrop-blur-md">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-3xl bg-white rounded-[40px] shadow-[0_30px_100px_rgba(0,0,0,0.1)] overflow-hidden">
-              <div className="bg-[#183c31] p-8 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="bg-white/10 p-3 rounded-xl text-white"><FaBookOpen size={24} /></div>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-cyan-950/30 backdrop-blur-xl">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-3xl bg-gradient-to-br from-white/90 to-cyan-50/90 backdrop-blur-3xl border-2 border-white rounded-[40px] shadow-[0_20px_70px_rgba(0,150,255,0.2)] overflow-hidden">
+              <div className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 p-8 flex items-center justify-between relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl text-white shadow-inner"><FaBookOpen size={28} /></div>
                   <div>
-                    <h3 className="text-white font-black uppercase tracking-widest text-sm">{editMode ? 'Edit Article' : 'Create Article'}</h3>
-                    <p className="text-cyan-200/60 text-[10px] font-bold">Manage your journal entries</p>
+                    <h3 className="text-white font-black uppercase tracking-widest text-lg drop-shadow-md">{editMode ? 'Edit Article' : 'Create Article'}</h3>
+                    <p className="text-cyan-50 text-[11px] font-bold tracking-wide mt-1">Manage your digital journal</p>
                   </div>
                 </div>
-                <button onClick={() => setShowAdminModal(false)} className="text-white/60 hover:text-white"><FaTimes size={20} /></button>
+                <button onClick={() => setShowAdminModal(false)} className="bg-white/20 p-3 rounded-xl text-white hover:bg-white hover:text-cyan-600 transition-all shadow-sm relative z-10"><FaTimes size={20} /></button>
               </div>
 
-              <form onSubmit={handleAdminSubmit} className="p-10 space-y-6 overflow-y-auto max-h-[70vh]">
+              <form onSubmit={handleAdminSubmit} className="p-8 md:p-10 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Article Title</label>
+                    <label className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.2em] ml-2">Article Title</label>
                     <input type="text" required className={inputStyle} placeholder="Main Title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Category</label>
+                    <label className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.2em] ml-2">Category</label>
                     <select className={inputStyle} value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                       <option value="Tech News">Tech News</option>
                       <option value="Interview Tips">Interview Tips</option>
@@ -267,34 +278,37 @@ const Articles = () => {
 
                 {/* Image Upload Logic */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Article Media</label>
+                  <label className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.2em] ml-2">Article Media</label>
                   <input type="file" hidden ref={fileInputRef} onChange={handleImageChange} accept="image/*" />
                   <div
                     onClick={() => fileInputRef.current.click()}
-                    className="border-2 border-dashed border-cyan-100 rounded-2xl p-6 flex flex-col items-center justify-center bg-cyan-50/20 group hover:border-cyan-400 transition-all cursor-pointer overflow-hidden min-h-[150px]"
+                    className="border-2 border-dashed border-cyan-300 rounded-3xl p-8 flex flex-col items-center justify-center bg-white/50 group hover:border-pink-400 hover:bg-pink-50 transition-all cursor-pointer overflow-hidden min-h-[160px] shadow-sm"
                   >
                     {imagePreview ? (
-                      <img src={imagePreview} className="h-32 w-full object-cover rounded-xl" alt="Preview" />
+                      <img src={imagePreview} className="h-40 w-full object-cover rounded-2xl shadow-md" alt="Preview" />
                     ) : (
                       <>
-                        <FaImage className="text-cyan-300 text-3xl mb-2 group-hover:scale-110 transition-transform" />
-                        <span className="text-[11px] font-bold text-cyan-600 uppercase tracking-widest">Upload From Media</span>
+                        <div className="bg-cyan-100 p-4 rounded-full mb-4 group-hover:bg-pink-100 transition-colors">
+                          <FaImage className="text-cyan-500 text-3xl group-hover:scale-110 group-hover:text-pink-500 transition-all" />
+                        </div>
+                        <span className="text-[12px] font-bold text-cyan-600 uppercase tracking-widest group-hover:text-pink-600">Upload Media</span>
+                        <span className="text-[10px] text-cyan-400 mt-2">Click or drag & drop</span>
                       </>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Brief Summary</label>
+                  <label className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.2em] ml-2">Brief Summary</label>
                   <textarea rows={2} required className={`${inputStyle} resize-none`} placeholder="Summarize the article..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Article Content</label>
+                  <label className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.2em] ml-2">Article Content</label>
                   <textarea rows={6} required className={`${inputStyle} resize-none leading-relaxed`} placeholder="Start writing your story..." value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} />
                 </div>
 
-                <button disabled={isSubmitting} className="w-full bg-[#183c31] hover:bg-[#122e26] text-white font-black py-5 rounded-[25px] shadow-xl flex items-center justify-center gap-3 tracking-[0.3em] uppercase text-[11px] transition-all">
-                  <FaPaperPlane /> {isSubmitting ? 'Publishing...' : 'Confirm & Publish'}
+                <button disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:from-pink-400 hover:via-purple-400 hover:to-cyan-400 text-white font-black py-5 rounded-[25px] shadow-[0_10px_25px_rgba(255,105,180,0.4)] hover:shadow-[0_15px_35px_rgba(255,105,180,0.6)] flex items-center justify-center gap-3 tracking-[0.3em] uppercase text-xs transition-all border border-pink-300 transform hover:-translate-y-1">
+                  <FaPaperPlane size={16} /> {isSubmitting ? 'Publishing...' : 'Confirm & Publish'}
                 </button>
               </form>
             </motion.div>

@@ -525,11 +525,19 @@ const Profile = () => {
                  <div className="space-y-1">
                    <label className="text-xs font-black text-dark-charcoal uppercase tracking-widest">Education Level</label>
                    <select value={formData.education} onChange={e=>setFormData({...formData, education: e.target.value})} className="w-full bg-white/80 border border-gray-200 text-black font-bold rounded-xl py-3 px-4 outline-none focus:border-[#4facfe] transition-colors duration-300 shadow-inner">
-                     <option value="None">None</option>
-                     <option value="High School">High School</option>
-                     <option value="Bachelors">Bachelors Degree</option>
-                     <option value="Masters">Masters Degree</option>
-                     <option value="PhD">PhD</option>
+                     <option value="">None / Choose Level</option>
+                     <option value="High School / 10th / 12th">High School / 10th / 12th</option>
+                     <option value="Diploma">Diploma</option>
+                     <option value="B.Tech / B.E">B.Tech / B.E</option>
+                     <option value="B.Sc / BCA">B.Sc / BCA</option>
+                     <option value="B.Com / BBA">B.Com / BBA</option>
+                     <option value="BA">BA</option>
+                     <option value="Master's Degree (M.Tech / ME)">Master's Degree (M.Tech / ME)</option>
+                     <option value="Master's Degree (MCA / M.Sc)">Master's Degree (MCA / M.Sc)</option>
+                     <option value="Master's Degree (MBA / M.Com / MA)">Master's Degree (MBA / M.Com / MA)</option>
+                     <option value="Ph.D / Doctorate">Ph.D / Doctorate</option>
+                     <option value="Any Graduate">Any Graduate</option>
+                     <option value="Other">Other</option>
                    </select>
                  </div>
                  <div className="space-y-1">

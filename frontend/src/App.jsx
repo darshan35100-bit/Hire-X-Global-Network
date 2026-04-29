@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './components/Home';
 import AdminJobPosting from './components/AdminJobPosting';
@@ -115,32 +115,32 @@ function App() {
 
               {/* Navigation Links on right */}
               <nav className="hidden lg:flex space-x-10 items-center">
-                <Link to="/" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Home</Link>
-                <Link to="/jobs" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Explore Opportunities</Link>
-                <Link to="/post-job" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Post a Job</Link>
+                <NavLink to="/" end className={({ isActive }) => `text-[15px] font-bold transition-all duration-300 py-1 border-b-[3px] ${isActive ? 'text-[#489895] border-[#489895]' : 'text-[#113253] border-transparent hover:text-[#489895]'}`}>Home</NavLink>
+                <NavLink to="/jobs" className={({ isActive }) => `text-[15px] font-bold transition-all duration-300 py-1 border-b-[3px] ${isActive ? 'text-[#489895] border-[#489895]' : 'text-[#113253] border-transparent hover:text-[#489895]'}`}>Explore Opportunities</NavLink>
+                <NavLink to="/post-job" className={({ isActive }) => `text-[15px] font-bold transition-all duration-300 py-1 border-b-[3px] ${isActive ? 'text-[#489895] border-[#489895]' : 'text-[#113253] border-transparent hover:text-[#489895]'}`}>Post a Job</NavLink>
 
-                <Link to="/articles" className="text-[#113253] font-bold hover:text-[#489895] transition-colors">Articles</Link>
+                <NavLink to="/articles" className={({ isActive }) => `text-[15px] font-bold transition-all duration-300 py-1 border-b-[3px] ${isActive ? 'text-[#489895] border-[#489895]' : 'text-[#113253] border-transparent hover:text-[#489895]'}`}>Articles</NavLink>
                 <HireIQ />
                 {user ? (
                   <div className="flex items-center space-x-6">
-                    <Link to="/profile" className="flex items-center space-x-3 group">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white shadow-md overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-[#806bf8] transition-all">
+                    <NavLink to="/profile" className={({ isActive }) => `flex items-center space-x-3 group py-1 border-b-[3px] transition-all duration-300 ${isActive ? 'border-[#489895]' : 'border-transparent'}`}>
+                      <div className={`w-10 h-10 rounded-full bg-gray-200 border-2 shadow-md overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-[#806bf8] transition-all ${isActive ? 'border-[#489895] ring-2 ring-[#489895]' : 'border-white'}`}>
                         {user.avatar ? (
                           <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
                         ) : (
                           <span className="font-extrabold text-[#113253]">{user.name.charAt(0).toUpperCase()}</span>
                         )}
                       </div>
-                      <span className="text-[#489895] font-bold group-hover:text-[#806bf8] transition-colors">Hi, {user.name.split(' ')[0]}</span>
-                    </Link>
+                      <span className={`font-bold transition-colors ${isActive ? 'text-[#489895]' : 'text-[#489895] group-hover:text-[#806bf8]'}`}>Hi, {user.name.split(' ')[0]}</span>
+                    </NavLink>
                     <button onClick={logout} className="px-5 py-2.5 bg-red-500 text-white font-extrabold rounded shadow-md hover:bg-red-600 transition-all duration-300 transform hover:-translate-y-2 hover:brightness-75 hover:shadow-lg text-sm uppercase tracking-wider">
                       Logout
                     </button>
                   </div>
                 ) : (
-                  <Link to="/login" className="px-6 py-2.5 bg-[#489895] text-white font-extrabold rounded shadow-md transition-all duration-300 transform hover:-translate-y-2 hover:brightness-75 hover:shadow-lg text-sm uppercase tracking-wider">
+                  <NavLink to="/login" className={({ isActive }) => `px-6 py-2.5 text-white font-extrabold rounded shadow-md transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg text-sm uppercase tracking-wider ${isActive ? 'bg-[#113253] border-b-4 border-[#489895]' : 'bg-[#489895] hover:brightness-75'}`}>
                     Login / Register
-                  </Link>
+                  </NavLink>
                 )}
               </nav>
 
@@ -164,24 +164,24 @@ function App() {
           {mobileMenuOpen && (
             <div className="lg:hidden bg-white border-t border-gray-100">
               <div className="px-4 pt-2 pb-6 space-y-2 flex flex-col">
-                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Home</Link>
-                <Link to="/jobs" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Explore Opportunities</Link>
-                <Link to="/post-job" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Post a Job</Link>
-                <Link to="/articles" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 rounded-md text-[#113253] font-bold hover:bg-gray-50">Articles</Link>
+                <NavLink to="/" end onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `block px-3 py-3 rounded-md font-bold transition-colors ${isActive ? 'text-[#489895] bg-[#e2f0ef] border-l-4 border-[#489895]' : 'text-[#113253] hover:bg-gray-50'}`}>Home</NavLink>
+                <NavLink to="/jobs" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `block px-3 py-3 rounded-md font-bold transition-colors ${isActive ? 'text-[#489895] bg-[#e2f0ef] border-l-4 border-[#489895]' : 'text-[#113253] hover:bg-gray-50'}`}>Explore Opportunities</NavLink>
+                <NavLink to="/post-job" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `block px-3 py-3 rounded-md font-bold transition-colors ${isActive ? 'text-[#489895] bg-[#e2f0ef] border-l-4 border-[#489895]' : 'text-[#113253] hover:bg-gray-50'}`}>Post a Job</NavLink>
+                <NavLink to="/articles" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `block px-3 py-3 rounded-md font-bold transition-colors ${isActive ? 'text-[#489895] bg-[#e2f0ef] border-l-4 border-[#489895]' : 'text-[#113253] hover:bg-gray-50'}`}>Articles</NavLink>
                 <div className="px-3 py-2"><HireIQ /></div>
 
                 {user ? (
                   <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col space-y-3">
-                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-3 px-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 shadow-sm flex items-center justify-center overflow-hidden">
+                    <NavLink to="/profile" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-[#e2f0ef] border-l-4 border-[#489895]' : ''}`}>
+                      <div className={`w-10 h-10 rounded-full bg-gray-200 shadow-sm flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-[#489895]' : 'border-gray-300'}`}>
                         {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" /> : <span className="font-bold">{user.name.charAt(0)}</span>}
                       </div>
-                      <span className="text-[#489895] font-bold">My Profile</span>
-                    </Link>
+                      <span className={`font-bold ${isActive ? 'text-[#489895]' : 'text-[#489895]'}`}>My Profile</span>
+                    </NavLink>
                     <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="mx-3 mt-2 px-5 py-3 bg-red-500 text-white font-bold rounded-lg text-left">Logout</button>
                   </div>
                 ) : (
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block mx-3 mt-4 px-5 py-3 bg-[#489895] text-white font-extrabold rounded-lg text-center uppercase">Login / Register</Link>
+                  <NavLink to="/login" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => `block mx-3 mt-4 px-5 py-3 text-white font-extrabold rounded-lg text-center uppercase transition-all duration-300 ${isActive ? 'bg-[#113253] border-b-4 border-[#489895]' : 'bg-[#489895]'}`}>Login / Register</NavLink>
                 )}
               </div>
             </div>

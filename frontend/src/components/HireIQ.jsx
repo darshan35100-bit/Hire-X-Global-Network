@@ -146,7 +146,7 @@ const HireIQ = () => {
       {/* Navbar Icon */}
       <button 
         onClick={handleToggle}
-        className="flex items-center gap-2 bg-gradient-to-r from-[#113253] to-[#489895] text-white px-4 py-2 rounded-full font-bold shadow-lg hover:shadow-xl transition-all relative group"
+        className={`flex items-center gap-2 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:shadow-xl transition-all relative group ${isOpen ? 'bg-gradient-to-r from-[#0c243c] to-[#3a7a78] ring-2 ring-[#489895] ring-offset-2' : 'bg-gradient-to-r from-[#113253] to-[#489895]'}`}
       >
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#806bf8] rounded-full animate-ping"></span>
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#806bf8] rounded-full"></span>

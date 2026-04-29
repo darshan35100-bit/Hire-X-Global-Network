@@ -6,6 +6,8 @@ const pool = require('./db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const pdfParse = require('pdf-parse');
+const Groq = require('groq-sdk');
 const sendEmail = require('./utils/sendEmail');
 const emailValidator = require('deep-email-validator');
 
@@ -157,11 +159,11 @@ app.post('/api/auth/send-verify-otp', async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otps['verify_' + identifier] = otp;
-    
+
     const emailSent = await sendEmail({
-       to: identifier,
-       subject: `Hire-X Global Network Verification OTP`,
-       text: `Welcome to Hire-X!\n\nYou have successfully requested an email verification.\n\nYour Verification OTP is: ${otp}\n\nBest regards,\nHire-X Team`
+      to: identifier,
+      subject: `Hire-X Global Network Verification OTP`,
+      text: `Welcome to Hire-X!\n\nYou have successfully requested an email verification.\n\nYour Verification OTP is: ${otp}\n\nBest regards,\nHire-X Team`
     });
 
     if (!emailSent) {
@@ -170,7 +172,7 @@ app.post('/api/auth/send-verify-otp', async (req, res) => {
     }
 
     res.json({ message: "Email OTP sent successfully." });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'System error.' });
   }
 });
@@ -273,16 +275,16 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       const user = result.rows[0];
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       otps[identifier] = otp;
-      
+
       const emailSent = await sendEmail({
-         to: identifier,
-         subject: `Password Reset OTP`,
-         text: `Hello,\n\nYou have successfully requested a password reset.\n\nYour OTP for resetting password is: ${otp}\n\nPlease do not share this with anyone.\n\nBest regards,\nHire-X Team`
+        to: identifier,
+        subject: `Password Reset OTP`,
+        text: `Hello,\n\nYou have successfully requested a password reset.\n\nYour OTP for resetting password is: ${otp}\n\nPlease do not share this with anyone.\n\nBest regards,\nHire-X Team`
       });
-      
+
       if (!emailSent) {
-         delete otps[identifier];
-         return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
+        delete otps[identifier];
+        return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
       }
 
       res.json({ message: "OTP sent to your Registered Email." });
@@ -416,11 +418,11 @@ app.post('/api/users/destroy-request-otp', authenticateToken, async (req, res) =
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otps['destroy_' + identifier] = otp;
-    
+
     const emailSent = await sendEmail({
-       to: identifier,
-       subject: `Account Destruction Warning OTP`,
-       text: `CRITICAL ALERT:\n\nYou have successfully requested to destroy your account.\n\nYour OTP to completely and permanently destroy your Hire-X account is: ${otp}\n\nDo not share this with anyone.`
+      to: identifier,
+      subject: `Account Destruction Warning OTP`,
+      text: `CRITICAL ALERT:\n\nYou have successfully requested to destroy your account.\n\nYour OTP to completely and permanently destroy your Hire-X account is: ${otp}\n\nDo not share this with anyone.`
     });
 
     if (!emailSent) {
@@ -429,7 +431,7 @@ app.post('/api/users/destroy-request-otp', authenticateToken, async (req, res) =
     }
 
     res.json({ message: "Destruction verification OTP sent successfully." });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'System error' });
   }
 });
@@ -437,17 +439,17 @@ app.post('/api/users/destroy-request-otp', authenticateToken, async (req, res) =
 app.post('/api/users/destroy-verify', authenticateToken, async (req, res) => {
   const identifier = req.body.identifier?.trim().toLowerCase();
   const { otp } = req.body;
-    if (otps['destroy_' + identifier] && otps['destroy_' + identifier] === otp) {
-      try {
-          const userId = req.user.id;
-          await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
-          await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
-          await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
-          await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
-          delete otps['destroy_' + identifier];
-          res.json({ message: "Account destroyed successfully." });
-      } catch(err) {
-        res.status(500).json({ error: 'System error during destruction' });
+  if (otps['destroy_' + identifier] && otps['destroy_' + identifier] === otp) {
+    try {
+      const userId = req.user.id;
+      await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
+      await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
+      await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
+      delete otps['destroy_' + identifier];
+      res.json({ message: "Account destroyed successfully." });
+    } catch (err) {
+      res.status(500).json({ error: 'System error during destruction' });
     }
   } else {
     res.status(400).json({ error: "Invalid or expired OTP." });
@@ -463,20 +465,20 @@ app.post('/api/auth/destroy-request-otp', async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otps['destroy_unauth_' + identifier] = otp;
-    
+
     const emailSent = await sendEmail({
-       to: identifier,
-       subject: `Account Destruction OTP`,
-       text: `CRITICAL ALERT:\n\nYou have successfully requested to destroy your account.\n\nYour OTP to permanently destroy your Hire-X account is: ${otp}\n\nDo not share this with anyone.`
+      to: identifier,
+      subject: `Account Destruction OTP`,
+      text: `CRITICAL ALERT:\n\nYou have successfully requested to destroy your account.\n\nYour OTP to permanently destroy your Hire-X account is: ${otp}\n\nDo not share this with anyone.`
     });
 
     if (!emailSent) {
-       delete otps['destroy_unauth_' + identifier];
-       return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
+      delete otps['destroy_unauth_' + identifier];
+      return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
     }
 
     res.json({ message: "Destruction verification OTP sent successfully." });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'System error' });
   }
 });
@@ -486,18 +488,18 @@ app.post('/api/auth/destroy-verify-unauth', async (req, res) => {
   const { otp } = req.body;
   if (otps['destroy_unauth_' + identifier] && otps['destroy_unauth_' + identifier] === otp) {
     try {
-        const userRes = await pool.query('SELECT id FROM Users WHERE LOWER(email) = $1', [identifier]);
+      const userRes = await pool.query('SELECT id FROM Users WHERE LOWER(email) = $1', [identifier]);
       if (userRes.rows.length > 0) {
-          const userId = userRes.rows[0].id;
-          await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
-          await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
-          await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
-          await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
+        const userId = userRes.rows[0].id;
+        await pool.query('DELETE FROM Applications WHERE user_id = $1', [userId]);
+        await pool.query('DELETE FROM Applications WHERE job_id IN (SELECT id FROM Jobs WHERE employer_id = $1)', [userId]);
+        await pool.query('DELETE FROM Jobs WHERE employer_id = $1', [userId]);
+        await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
       }
       delete otps['destroy_unauth_' + identifier];
-        res.json({ message: "Account successfully terminated" });
-    } catch(err) {
-        res.status(500).json({ error: 'System error during destruction' });
+      res.json({ message: "Account successfully terminated" });
+    } catch (err) {
+      res.status(500).json({ error: 'System error during destruction' });
     }
   } else {
     res.status(400).json({ error: "Invalid or expired OTP." });
@@ -525,7 +527,7 @@ app.delete('/api/jobs/:id', authenticateToken, async (req, res) => {
     if (check.rows[0].employer_id !== req.user.id && req.user.role !== 'main_admin' && req.user.role !== 'main_admin') {
       return res.status(403).json({ error: 'Unauthorized to delete this job' });
     }
-    
+
     // Only delete strictly non-shortlisted applications to retain history. Or actually, just set them aside if we need permanence. Let's delete non-shortlisted only.
     await pool.query("DELETE FROM Applications WHERE job_id = $1 AND status != 'Shortlisted'", [jobId]);
     // For shortlisted, we could nullify job_id if we want to delete job, but job_id is cascading in DB if we didn't change it initially.
@@ -544,17 +546,11 @@ app.delete('/api/jobs/:id', authenticateToken, async (req, res) => {
 app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
   const { cv_pdf_base64, job_description, profile_name } = req.body;
   try {
-    // Integrate Gemini API for ATS scoring
-    if (!process.env.GEMINI_API_KEY) {
+    // Integrate Groq Llama API for ATS scoring
+    if (!process.env.GROQ_API_KEY) {
       return res.json({ ats_score: Math.floor(Math.random() * 40) + 60, analysis: "Demo Analysis: Great match but missing API key.", suggested_roles: [], top_skills: ["Demo Skill 1", "Demo Skill 2"], experience_summary: "Demo Experience 2+ years" });
     }
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash", 
-      generationConfig: { 
-        temperature: 0.2
-      } 
-    });
+
     const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Deeply analyze the provided PDF Document against the provided job description. 
     Job Description: "${job_description || 'General Tech Role'}". 
     Candidate Profile Registration Name: "${profile_name || 'N/A'}".
@@ -574,20 +570,29 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     "mismatch_alert": Check if the name written inside the CV matches the 'Candidate Profile Registration Name'. If the names obviously DO NOT MATCH, output an alert string (e.g. "Warning: The name on the CV does not match your registered profile name."). If they match or no name is found, return an empty string "".
     
     Output ONLY raw valid JSON without any markdown formatting like \`\`\`json.`;
-    
-    let mimeType = "application/pdf";
-    if (req.body.mimeType) {
-        mimeType = req.body.mimeType;
-    }
-    const documentPart = {
-      inlineData: {
-        data: cv_pdf_base64,
-        mimeType: mimeType
-      }
-    };
 
-    const result = await model.generateContent([prompt, documentPart]);
-      let output = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    // Extract text from PDF
+    const pdfBuffer = Buffer.from(cv_pdf_base64, 'base64');
+    let cvText = "";
+    try {
+      const pdfData = await pdfParse(pdfBuffer);
+      cvText = pdfData.text;
+    } catch (parseErr) {
+      console.error("PDF Parse Error:", parseErr);
+      return res.json({ ats_score: 0, analysis: "ERROR: Failed to read text from the provided PDF document. Please ensure it is a valid text-based PDF.", suggested_roles: [], top_skills: [], experience_summary: "N/A", mismatch_alert: "" });
+    }
+
+    const chatCompletion = await groqClient.chat.completions.create({
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: `Here is the extracted text from the candidate's CV:\n\n${cvText}` }
+      ],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" },
+      temperature: 0.2
+    });
+
+    let output = chatCompletion.choices[0]?.message?.content || "{}";
     const data = JSON.parse(output);
     res.json(data);
   } catch (err) {
@@ -618,33 +623,33 @@ app.post('/api/applications', authenticateToken, async (req, res) => {
     );
 
     // Notify Employer and send automated emails
-      
-      sendNotificationToClients({
-        type: 'NEW_APPLICATION',
-        user_id: employerId,
-        message: `New global applicant for: ${jobTitle} with ATS Score: ${ats_score}`
-      });
 
-      const now = new Date();
-      const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-      const dd = String(istTime.getUTCDate()).padStart(2, '0');
-      const mm = String(istTime.getUTCMonth() + 1).padStart(2, '0');
-      const yyyy = istTime.getUTCFullYear();
-      const submitDateStr = `${dd}-${mm}-${yyyy}`;
-      let hours = istTime.getUTCHours();
-      const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12; 
-      const submitTimeStr = `${hours}:${minutes} ${ampm}`;
+    sendNotificationToClients({
+      type: 'NEW_APPLICATION',
+      user_id: employerId,
+      message: `New global applicant for: ${jobTitle} with ATS Score: ${ats_score}`
+    });
 
-      // Send Real Email to Applicant
-      const applicantRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [req.user.id]);
-      if (applicantRes.rows.length > 0) {
-         await sendEmail({
-             to: applicantRes.rows[0].email,
-             subject: `Application Submitted: ${jobTitle}`,
-             text: `Hello ${applicantRes.rows[0].name},
+    const now = new Date();
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const dd = String(istTime.getUTCDate()).padStart(2, '0');
+    const mm = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+    const yyyy = istTime.getUTCFullYear();
+    const submitDateStr = `${dd}-${mm}-${yyyy}`;
+    let hours = istTime.getUTCHours();
+    const minutes = String(istTime.getUTCMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const submitTimeStr = `${hours}:${minutes} ${ampm}`;
+
+    // Send Real Email to Applicant
+    const applicantRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [req.user.id]);
+    if (applicantRes.rows.length > 0) {
+      await sendEmail({
+        to: applicantRes.rows[0].email,
+        subject: `Application Submitted: ${jobTitle}`,
+        text: `Hello ${applicantRes.rows[0].name},
 
 Congratulations! You have successfully submitted your application to ${appliedCompany} for the job role: ${jobTitle}.
 
@@ -658,16 +663,16 @@ Please prepare well and wait for the employer to review your profile. All the be
 
 Warm Regards,
 Hire-X Global Network`
-         });
-      }
+      });
+    }
 
-      // Send Real Email to Employer
-      const empRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [employerId]);
-      if (empRes.rows.length > 0) {
-         await sendEmail({
-             to: empRes.rows[0].email,
-             subject: `New Application Received: ${jobTitle}`,
-             text: `Hello ${empRes.rows[0].name},
+    // Send Real Email to Employer
+    const empRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [employerId]);
+    if (empRes.rows.length > 0) {
+      await sendEmail({
+        to: empRes.rows[0].email,
+        subject: `New Application Received: ${jobTitle}`,
+        text: `Hello ${empRes.rows[0].name},
 
 Congratulations! You have successfully received a new application for the job role: ${jobTitle}.
 
@@ -681,8 +686,8 @@ Please log in to your Hire-X dashboard to review the full details and CV. All th
 
 Warm Regards,
 Hire-X Global Network`
-         });
-      }
+      });
+    }
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -727,7 +732,7 @@ app.delete('/api/feedbacks/:id', authenticateToken, async (req, res) => {
     if (check.rows[0].user_id !== req.user.id && req.user.role !== 'main_admin' && req.user.role !== 'main_admin') {
       return res.status(403).json({ error: 'Unauthorized to delete this feedback' });
     }
-    
+
     await pool.query('DELETE FROM Feedbacks WHERE id = $1', [feedbackId]);
     res.json({ success: true, message: 'Feedback deleted successfully' });
   } catch (err) {
@@ -745,14 +750,14 @@ app.get('/api/applications', authenticateToken, async (req, res) => {
       LEFT JOIN Users u ON a.user_id = u.id
     `;
     let params = [];
-    if (req.user.role === 'employer' || true) { 
+    if (req.user.role === 'employer' || true) {
       query += ` WHERE a.employer_id = $1 OR j.employer_id = $1`;
       params.push(req.user.id);
     }
     query += ` ORDER BY a.id DESC`;
 
     const result = await pool.query(query, params);
-    
+
     // Also fetch jobs they applied to
     const appliedQuery = `
       SELECT a.id, a.status, a.ats_score, a.cv_analysis, j.title as role, j.company_name, j.location as location, j.description, j.education_level, j.qualification, j.years_experience, j.end_date, j.company_logo, j.official_notification
@@ -792,11 +797,11 @@ app.post('/api/applications/:id/status', authenticateToken, async (req, res) => 
       // Simulation of Emails and SMS
       const userRes = await pool.query('SELECT name, email, mobile_number FROM Users WHERE id=$1', [appRecord.user_id]);
       const jobRes = await pool.query('SELECT title, employer_id FROM Jobs WHERE id=$1', [appRecord.job_id]);
-      
+
       const userName = userRes.rows[0]?.name || 'Applicant';
       const userEmail = userRes.rows[0]?.email || 'no-reply@hire-x.com';
       const jobTitle = jobRes.rows[0]?.title || 'Position';
-      
+
       let emailMsg = `Hello ${userName},
 
 Your application status for the role of ${jobTitle} has been updated to: ${status}.
@@ -810,13 +815,13 @@ Hire-X Team`;
         const empNameQuery = await pool.query('SELECT email, name FROM Users WHERE id=$1', [jobRes.rows[0]?.employer_id]);
         const jobCompanyRes = await pool.query('SELECT company_name FROM Jobs WHERE id=$1', [appRecord.job_id]);
         const companyName = jobCompanyRes.rows.length > 0 && jobCompanyRes.rows[0].company_name ? jobCompanyRes.rows[0].company_name : (empNameQuery.rows.length > 0 ? empNameQuery.rows[0].name : 'the Company');
-        
+
         let formattedDate = 'TBD';
         if (interviewDate) {
-           const [yyyy, mm, dd] = interviewDate.split('-');
-           const dateObj = new Date(interviewDate);
-           const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-           formattedDate = `${dd}-${mm}-${yyyy}, ${dayName}`;
+          const [yyyy, mm, dd] = interviewDate.split('-');
+          const dateObj = new Date(interviewDate);
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+          formattedDate = `${dd}-${mm}-${yyyy}, ${dayName}`;
         }
 
         emailMsg = `Hello ${userName},
@@ -833,12 +838,12 @@ Please prepare well and attend the interview on time. All the best!
 
 Warm Regards,
 Hire-X Global Network`;
-        
+
         if (empNameQuery.rows.length > 0) {
-           await sendEmail({
-              to: empNameQuery.rows[0].email,
-              subject: `Candidate Shortlisted: ${jobTitle}`,
-              text: `Hello ${empNameQuery.rows[0].name},
+          await sendEmail({
+            to: empNameQuery.rows[0].email,
+            subject: `Candidate Shortlisted: ${jobTitle}`,
+            text: `Hello ${empNameQuery.rows[0].name},
 
 You have successfully shortlisted "${userName}" for the role of ${jobTitle}. The candidate has been formally notified about the interview schedule:
 
@@ -851,14 +856,14 @@ Friendly reminder to be prepared for the interview at the allocated time.
 
 Best regards,
 Hire-X Team`
-           });
+          });
         }
 
         // Notify Admin as requested
         await sendEmail({
-           to: 'admin@hire-x.com',
-           subject: `Admin Alert: Candidate Shortlisted: ${jobTitle}`,
-           text: `Hello Admin,
+          to: 'admin@hire-x.com',
+          subject: `Admin Alert: Candidate Shortlisted: ${jobTitle}`,
+          text: `Hello Admin,
 
 Aspirant "${userName}" was just shortlisted for "${jobTitle}".
 
@@ -874,9 +879,9 @@ System Auto-Generated.`
 
       // Send Real Email to Applicant
       await sendEmail({
-         to: userEmail,
-         subject: `Application Update: ${jobTitle} - ${status}`,
-         text: emailMsg
+        to: userEmail,
+        subject: `Application Update: ${jobTitle} - ${status}`,
+        text: emailMsg
       });
 
       res.json({ success: true, app: appRecord });
@@ -889,36 +894,34 @@ System Auto-Generated.`
 });
 
 // --- Hire-IQ Generative AI Endpoint ---
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'MISSING_API_KEY');
+const groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY || 'MISSING_API_KEY' });
 
 app.post('/api/chat', authenticateToken, async (req, res) => {
   const { message, history } = req.body;
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     return res.json({
-      text: "ಇದೊಂದು ಡೆಮೊ ರಿಸ್ಪಾನ್ಸ್. ಅಸಲಿ Assistant ಆಗಿ ಕೆಲಸ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ '.env' ಫೈಲ್‌ನಲ್ಲಿ 'GEMINI_API_KEY' ಸೇರಿಸಿ. (This is a demo response. Please add 'GEMINI_API_KEY' to your .env file to enable real Assistant features)."
+      text: "ಇದೊಂದು ಡೆಮೊ ರಿಸ್ಪಾನ್ಸ್. ಅಸಲಿ Assistant ಆಗಿ ಕೆಲಸ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ '.env' ಫೈಲ್‌ನಲ್ಲಿ 'GROQ_API_KEY' ಸೇರಿಸಿ. (This is a demo response. Please add 'GROQ_API_KEY' to your .env file to enable real Assistant features)."
     });
   }
 
   try {
-    const model = genAI.getGenerativeModel(
-      { model: "gemini-2.5-flash" }
-    );
-
     const formattedHistory = history.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.text
     }));
 
-    const chat = model.startChat({
-      history: formattedHistory,
-      systemInstruction: {
-        role: "system",
-        parts: [{ text: "You are Hire-IQ ✨, an advanced conversational Assistant by Hire-X. You must answer ANY user queries, whether science, coding, history, or casual talk, exactly like a generic highly-intelligent Assistant. DO NOT bring up jobs or Hire-X randomly unless explicitly asked by the user.\n\nCRITICAL DIRECTIVES:\n1. Only respond with what is asked. If they say hi, respond normally.\n2. You are practically omniscient. Answer all general knowledge.\n3. MASTER OF LANGUAGES & SCRIPTS: If the user speaks Kannada using English letters (e.g., 'en madta idiya'), YOU MUST reply in proper Kannada script (e.g., 'ನಾನು ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ'). If the user speaks English using Kannada letters (e.g., 'ಹೌ ಆರ್ ಯು'), YOU MUST reply in proper English script (e.g., 'I am fine, and you?'). Always respond in the native standard script of the underlying language the user intended to speak!\n4. ONLY if the user explicitly asks for jobs, present jobs from the context. If they ask for 'developer jobs', ONLY show matching developer jobs.\n5. When you list a job, include the direct link exactly formatted like this: [Apply for {Job Title} here](/jobs?title={Job Title})." }]
-      }
+    const systemPrompt = "You are Hire-IQ ✨, an advanced conversational Assistant by Hire-X. You must answer ANY user queries, whether science, coding, history, or casual talk, exactly like a generic highly-intelligent Assistant. DO NOT bring up jobs or Hire-X randomly unless explicitly asked by the user.\n\nCRITICAL DIRECTIVES:\n1. Only respond with what is asked. If they say hi, respond normally.\n2. You are practically omniscient. Answer all general knowledge.\n3. MASTER OF LANGUAGES & SCRIPTS: If the user speaks Kannada using English letters (e.g., 'en madta idiya'), YOU MUST reply in proper Kannada script (e.g., 'ನಾನು ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ'). If the user speaks English using Kannada letters (e.g., 'ಹೌ ಆರ್ ಯು'), YOU MUST reply in proper English script (e.g., 'I am fine, and you?'). Always respond in the native standard script of the underlying language the user intended to speak!\n4. ONLY if the user explicitly asks for jobs, present jobs from the context. If they ask for 'developer jobs', ONLY show matching developer jobs.\n5. When you list a job, include the direct link exactly formatted like this: [Apply for {Job Title} here](/jobs?title={Job Title}).";
+
+    const chatCompletion = await groqClient.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...formattedHistory,
+        { role: "user", content: message }
+      ],
+      model: "llama-3.1-8b-instant"
     });
 
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
+    const responseText = chatCompletion.choices[0]?.message?.content || "";
     res.json({ text: responseText });
   } catch (error) {
     console.error("AI Chat Error:", error);
@@ -933,16 +936,16 @@ app.post('/api/suggestions', authenticateToken, async (req, res) => {
     const userRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [req.user.id]);
     if (userRes.rows.length > 0) {
       const user = userRes.rows[0];
-      
+
       await pool.query('INSERT INTO Suggestions (user_id, name, email, text) VALUES ($1, $2, $3, $4)', [req.user.id, user.name, user.email, text]);
-      
+
       const adminQ = await pool.query("SELECT email FROM Users WHERE role = 'main_admin'");
       const adminEmail = adminQ.rows.length > 0 ? adminQ.rows[0].email : 'darshankm35100@gmail.com';
       await sendEmail({
-         to: adminEmail,
-         subject: `New Suggestion from Hire-X Global Network`,
-         text: `Hello Main Admin,\n\nYou have received a new suggestion from a user on the Hire-X platform.\n\nUser Details:\nName: ${user.name}\nEmail: ${user.email}\n\nSuggestion/Complaint:\n"${text}"\n\nPlease take the necessary actions according to Hire-X Global Network guidelines.\n\nWarm Regards,\nHire-X System Automations`,
-         fromName: user.name
+        to: adminEmail,
+        subject: `New Suggestion from Hire-X Global Network`,
+        text: `Hello Main Admin,\n\nYou have received a new suggestion from a user on the Hire-X platform.\n\nUser Details:\nName: ${user.name}\nEmail: ${user.email}\n\nSuggestion/Complaint:\n"${text}"\n\nPlease take the necessary actions according to Hire-X Global Network guidelines.\n\nWarm Regards,\nHire-X System Automations`,
+        fromName: user.name
       });
 
       res.json({ success: true, message: 'Suggestion sent to Main Admin successfully.' });
@@ -979,15 +982,15 @@ app.post('/api/suggestions/:id/reply', authenticateToken, async (req, res) => {
   const { replyText } = req.body;
   try {
     const sug = await pool.query('SELECT name, email, text FROM Suggestions WHERE id = $1', [req.params.id]);
-    if(sug.rows.length === 0) return res.status(404).json({ error: 'Suggestion not found' });
-    
+    if (sug.rows.length === 0) return res.status(404).json({ error: 'Suggestion not found' });
+
     await sendEmail({
       to: sug.rows[0].email,
       subject: `Reply to your Suggestion on Hire-X`,
       text: `Hello ${sug.rows[0].name},\n\n${replyText}\n\nWarm Regards,\nHire-X Team`,
       fromName: 'Hire-X Global Network'
     });
-    
+
     res.json({ success: true, message: 'Reply sent successfully.' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to send reply' });
@@ -1021,7 +1024,7 @@ app.get('/api/articles', async (req, res) => {
 app.post('/api/articles', authenticateToken, async (req, res) => {
   if (req.user.role !== 'main_admin' && req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
   const { title, category, description, content, read_time, image_url } = req.body;
-  if(!title || !category || !description || !content || !image_url) return res.status(400).json({ error: 'All fields are mandatory, including background image.' });
+  if (!title || !category || !description || !content || !image_url) return res.status(400).json({ error: 'All fields are mandatory, including background image.' });
   try {
     const result = await pool.query(
       'INSERT INTO Articles (title, category, description, content, read_time, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
@@ -1037,7 +1040,7 @@ app.put('/api/articles/:id', authenticateToken, async (req, res) => {
   if (req.user.role !== 'main_admin' && req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
   const articleId = req.params.id;
   const { title, category, description, content, read_time, image_url } = req.body;
-  if(!title || !category || !description || !content || !image_url) return res.status(400).json({ error: 'All fields are mandatory, including background image.' });
+  if (!title || !category || !description || !content || !image_url) return res.status(400).json({ error: 'All fields are mandatory, including background image.' });
   try {
     const result = await pool.query(
       'UPDATE Articles SET title=$1, category=$2, description=$3, content=$4, read_time=$5, image_url=$6 WHERE id=$7 RETURNING *',
@@ -1084,8 +1087,8 @@ app.get('/api/admin/users/:id/details', authenticateToken, async (req, res) => {
       appliedJobs: applied.rows,
       feedbacks: feedbacks.rows
     });
-  } catch(err) {
-    res.status(500).json({error: 'Failed to fetch user details'});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user details' });
   }
 });
 
@@ -1100,7 +1103,7 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
     await pool.query('DELETE FROM Suggestions WHERE user_id = $1', [userId]);
     await pool.query('DELETE FROM Users WHERE id = $1', [userId]);
     res.json({ success: true, message: 'User and all associated data deleted completely.' });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
@@ -1110,7 +1113,7 @@ app.delete('/api/admin/applications/:id', authenticateToken, async (req, res) =>
   try {
     await pool.query('DELETE FROM Applications WHERE id = $1', [req.params.id]);
     res.json({ success: true, message: 'Application deleted successfully' });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'Failed to delete application' });
   }
 });
@@ -1120,7 +1123,7 @@ app.get('/api/admin/jobs', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query('SELECT Jobs.*, Users.name as employer_name FROM Jobs LEFT JOIN Users ON Jobs.employer_id = Users.id ORDER BY company_name ASC');
     res.json(result.rows);
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'Failed to fetch all jobs' });
   }
 });
@@ -1132,14 +1135,14 @@ app.post('/api/auth/admin-change-req-otp', authenticateToken, async (req, res) =
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otps['admin_change_' + req.user.email] = otp;
     const emailSent = await sendEmail({
-       to: req.user.email,
-       subject: `Admin Credential Change Request OTP`,
-       text: `Hello Main Admin,\n\nYour OTP to initiate credential change is: ${otp}\n\nDo not share this with anyone.`,
-       fromName: 'Hire-X Global Network'
+      to: req.user.email,
+      subject: `Admin Credential Change Request OTP`,
+      text: `Hello Main Admin,\n\nYour OTP to initiate credential change is: ${otp}\n\nDo not share this with anyone.`,
+      fromName: 'Hire-X Global Network'
     });
     if (!emailSent) return res.status(400).json({ error: 'Failed to send email.' });
     res.json({ message: "OTP sent to current email." });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'System error' });
   }
 });
@@ -1168,14 +1171,14 @@ app.post('/api/auth/admin-new-email-otp', authenticateToken, async (req, res) =>
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otps['admin_new_email_' + newEmail] = otp;
     const emailSent = await sendEmail({
-       to: newEmail,
-       subject: `Verify New Admin Email`,
-       text: `Hello Main Admin,\n\nYour OTP to verify your new email is: ${otp}\n\nDo not share this with anyone.`,
-       fromName: 'Hire-X Global Network'
+      to: newEmail,
+      subject: `Verify New Admin Email`,
+      text: `Hello Main Admin,\n\nYour OTP to verify your new email is: ${otp}\n\nDo not share this with anyone.`,
+      fromName: 'Hire-X Global Network'
     });
     if (!emailSent) return res.status(400).json({ error: 'Failed to send email.' });
     res.json({ message: "OTP sent to new email." });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'System error' });
   }
 });
@@ -1194,7 +1197,7 @@ app.post('/api/auth/admin-verify-new-email-otp', authenticateToken, async (req, 
 app.post('/api/auth/admin-update-credentials', authenticateToken, async (req, res) => {
   if (req.user.role !== 'main_admin') return res.status(403).json({ error: 'Unauthorized' });
   const { newEmail, newPassword, otp } = req.body;
-  
+
   if (!otps['admin_new_email_' + newEmail] || otps['admin_new_email_' + newEmail] !== otp) {
     return res.status(400).json({ error: "Invalid OTP" });
   }
@@ -1204,11 +1207,11 @@ app.post('/api/auth/admin-update-credentials', authenticateToken, async (req, re
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     await pool.query(
-      'UPDATE Users SET email = $1, password = $2, name = $3, mobile_number = $4, location = $5, avatar = $6, profile_progress = 30 WHERE id = $7', 
+      'UPDATE Users SET email = $1, password = $2, name = $3, mobile_number = $4, location = $5, avatar = $6, profile_progress = 30 WHERE id = $7',
       [newEmail, hashedPassword, 'New Admin', '', '', '', req.user.id]
     );
     res.json({ success: true, message: "Credentials successfully modified." });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ error: 'System error' });
   }
 });

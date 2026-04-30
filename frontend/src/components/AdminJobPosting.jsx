@@ -190,7 +190,7 @@ const AdminJobPosting = () => {
 
               {/* Uploader Section - Glass Style */}
               <div className="space-y-2">
-                <label className={labelStyle}>Company Logo <span className="text-gray-400 font-medium">(Optional - Max 2MB)</span></label>
+                <label className={labelStyle}>Company Logo <span className="text-gray-400 font-medium">(Image only - Max 2MB)</span></label>
                 <div className="relative border-2 border-dashed border-emerald-100 rounded-2xl p-4 flex items-center justify-between bg-emerald-50/20 hover:bg-white transition-all cursor-pointer">
                   <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
                     const file = e.target.files[0];
@@ -216,13 +216,13 @@ const AdminJobPosting = () => {
               </div>
 
               <div className="space-y-2">
-                <label className={labelStyle}>Official Notification <span className="text-gray-400 font-medium">(Optional - PDF Only)</span></label>
+                <label className={labelStyle}>Official Notification <span className="text-gray-400 font-medium">(Optional - PDF Only - Max 5MB)</span></label>
                 <div className="relative border-2 border-dashed border-emerald-100 rounded-2xl p-4 flex items-center justify-between bg-emerald-50/20 hover:bg-white transition-all cursor-pointer">
                   <input type="file" accept=".pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert("File size exceeds 2MB limit. Please upload a smaller PDF.");
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert("File size exceeds 5MB limit. Please upload a smaller PDF.");
                         e.target.value = '';
                         return;
                       }

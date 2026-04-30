@@ -130,7 +130,7 @@ const Home = () => {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setArticles(data.reverse().slice(0, 3));
+          setArticles(data.slice(0, 3));
         }
       })
       .catch(console.error);
@@ -346,24 +346,40 @@ const Home = () => {
             <Link to="/articles" className="inline-flex items-center gap-2 mt-6 md:mt-0 bg-white/50 border border-gray-200 text-[#113253] font-bold px-8 py-4 rounded-full text-sm tracking-wide transition-all">Explore All Articles</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {articles.length > 0 ? articles.map((article, idx) => (
-              <Link to="/articles" key={idx} className="block">
-                <motion.div variants={itemVariants} className="group relative flex flex-col h-[500px] rounded-[32px] overflow-hidden bg-white shadow-sm transition-all">
-                  <div className="absolute top-0 left-0 w-full h-[65%] bg-cover bg-center group-hover:scale-105 transition-transform" style={{ backgroundImage: `url('${article.image_url || 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80'}')` }} />
-                  <div className="absolute bottom-2 left-2 right-2 top-[45%] flex flex-col">
-                    <div className="h-full bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[26px] p-6 flex flex-col transition-all group-hover:bg-white/90">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-[#806bf8] bg-[#f0ecfc] font-black uppercase tracking-widest text-[10px] px-3 py-1.5 rounded-full">{article.category || 'Insights'}</span>
-                        <span className="text-gray-500 font-bold text-[11px]">Recent · {article.read_time || '5 min read'}</span>
-                      </div>
-                      <h4 className="font-extrabold text-[#113253] text-xl leading-tight mb-3 line-clamp-2">{article.title}</h4>
-                      <p className="text-gray-500 font-medium text-sm line-clamp-2 mb-4 flex-grow">{article.description}</p>
-                      <div className="mt-auto flex items-center gap-2 text-[#113253] font-bold text-sm border-t border-gray-200/50 pt-4">Read Full Article →</div>
+            {articles.length > 0 ? articles.map((article, idx) => {
+              const placeholderImages = [
+                "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072",
+                "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070",
+                "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=1964",
+                "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070",
+                "https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=1974"
+              ];
+              return (
+              <Link to={`/articles?title=${encodeURIComponent(article.title)}`} key={idx} className="block h-full">
+                <motion.div variants={itemVariants} className="group bg-gradient-to-br from-cyan-100/90 via-teal-50/90 to-cyan-200/90 backdrop-blur-2xl rounded-3xl border-2 border-white/60 overflow-hidden shadow-[0_10px_40px_rgba(0,200,255,0.15)] hover:shadow-[0_20px_50px_rgba(0,200,255,0.3)] hover:border-cyan-300 transition-all duration-500 flex flex-col h-full cursor-pointer transform hover:-translate-y-2">
+                  <div className="p-3">
+                    <div className="rounded-2xl overflow-hidden aspect-[16/10] bg-cyan-900/10 relative shadow-inner">
+                      <img src={article.image_url || placeholderImages[idx % placeholderImages.length]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/60 via-transparent to-transparent opacity-80"></div>
+                    </div>
+                  </div>
+                  <div className="p-6 flex flex-col flex-grow relative">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-pink-600 font-black text-[9px] uppercase tracking-widest bg-pink-100 border border-pink-200 px-3 py-1 rounded-lg shadow-sm">{article.category}</span>
+                      <span className="text-cyan-800 font-bold text-[10px] flex items-center gap-1 bg-white/50 px-2 py-1 rounded-md">
+                        <svg className="w-3 h-3 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                        {article.read_time}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-black text-cyan-950 mb-3 leading-tight line-clamp-2 group-hover:text-purple-600 transition-colors drop-shadow-sm">{article.title}</h3>
+                    <p className="text-cyan-800/80 text-sm line-clamp-3 mb-6 flex-grow font-medium">{article.description}</p>
+                    <div className="w-full py-3.5 rounded-xl bg-white/60 text-cyan-700 font-black text-[10px] uppercase tracking-[0.2em] group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:via-teal-400 group-hover:to-cyan-500 group-hover:text-white shadow-sm group-hover:shadow-[0_10px_20px_rgba(0,255,255,0.4)] transition-all duration-300 flex items-center justify-center gap-2 border border-white">
+                      Read Article <span className="text-lg leading-none">→</span>
                     </div>
                   </div>
                 </motion.div>
               </Link>
-            )) : (
+            )}) : (
               <p className="col-span-3 text-center text-gray-500 font-medium py-10">No recent articles found. Stay tuned!</p>
             )}
           </div>

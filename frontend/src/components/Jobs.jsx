@@ -135,7 +135,7 @@ const Jobs = () => {
         setAnalysisResult(aiData);
       } catch (err) {
         console.error(err);
-        alert("System error processing your document. Please verify it is a valid PDF/TXT file and under 20MB.");
+        alert("System error processing your document. Please verify it is a valid PDF/TXT file and under 2MB.");
       }
       setApplying(false);
     };
@@ -171,7 +171,7 @@ const Jobs = () => {
       {/* Decorative Background Elements */}
       <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] bg-white/20 rounded-full blur-[80px] pointer-events-none"></div>
       <div className="absolute bottom-[-150px] right-[-150px] w-[600px] h-[600px] bg-[#10b981]/20 rounded-full blur-[100px] pointer-events-none"></div>
-      
+
       {/* Abstract wave patterns for the background as seen in the photo */}
       <svg className="absolute bottom-0 right-0 opacity-20 pointer-events-none" width="400" height="400" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
         <path fill="#059669" d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,81.1,-46.2C90.4,-33.3,95.9,-17.6,94.9,-2.4C93.9,12.8,86.4,27.5,75.9,39.6C65.4,51.7,51.9,61.1,37.3,67.6C22.7,74.1,7,77.7,-8.4,78.2C-23.8,78.7,-38.9,76.1,-52.1,69.1C-65.3,62.1,-76.6,50.7,-84.1,36.7C-91.6,22.7,-95.3,6.1,-93,-9.6C-90.7,-25.3,-82.4,-40.1,-70.5,-51C-58.6,-61.9,-43,-68.9,-28.5,-74.6C-14,-80.3,1.4,-84.7,15.8,-83.1C30.2,-81.5,43.6,-73.9,44.7,-76.4Z" transform="translate(100 100) scale(1.1)" />
@@ -316,8 +316,8 @@ const Jobs = () => {
                               e.target.value = null;
                               return;
                             }
-                            if (file.size > 20 * 1024 * 1024) {
-                              alert("File size must be below 20 MB.");
+                            if (file.size > 2 * 1024 * 1024) {
+                              alert("File size must be below 2 MB.");
                               e.target.value = null;
                               return;
                             }
@@ -334,7 +334,7 @@ const Jobs = () => {
                         </div>
                       </div>
                       <p className="text-gray-800 font-bold mb-1 text-lg">Click to Upload CV</p>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">PDF format only (Max 20MB)</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">PDF format only (Max 2MB)</p>
                     </label>
                     {cvFile && (
                       <div className="mt-6 p-4 bg-emerald-100 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
@@ -349,23 +349,23 @@ const Jobs = () => {
                     disabled={!cvFile || applying}
                     className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black rounded-xl shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm"
                   >
-                    {applying ? 'Evaluating Profile using AI...' : 'Analyze & Proceed'}
+                    {applying ? 'Evaluating Profile...' : 'Analyze & Proceed'}
                   </button>
                 </div>
               ) : !finalSubmitSuccess ? (
                 <div className="space-y-6 animate-fadeIn">
                   <div className={`p-6 rounded-3xl border ${analysisResult.ats_score === 0 ? 'bg-red-50 border-red-300 shadow-sm' : 'bg-gray-50 border-gray-200 shadow-inner'}`}>
                     <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-5">
-                      <h4 className="text-xl font-black text-gray-800 tracking-tight">AI Profile Match</h4>
+                      <h4 className="text-xl font-black text-gray-800 tracking-tight">Profile Match Score</h4>
                       <div className={`text-5xl font-black drop-shadow-sm ${analysisResult.ats_score > 75 ? 'text-green-500' : analysisResult.ats_score > 40 ? 'text-yellow-500' : 'text-red-500'}`}>
                         {analysisResult.ats_score}<span className="text-2xl">%</span>
                       </div>
                     </div>
-                    
+
                     {analysisResult.ats_score === 0 && (
                       <div className="bg-red-100 border-l-4 border-red-500 p-4 rounded mb-6 shadow-sm">
                         <p className="text-red-900 font-bold text-sm flex items-center gap-2">
-                          <span className="text-lg">🛑</span> 
+                          <span className="text-lg">🛑</span>
                           <span>Warning: This document does not appear to be a valid CV for this job. However, you can still proceed to apply.</span>
                         </p>
                       </div>
@@ -374,7 +374,7 @@ const Jobs = () => {
                     {analysisResult.mismatch_alert && analysisResult.mismatch_alert.trim() !== "" && (
                       <div className="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-xl mb-6 shadow-sm">
                         <p className="text-orange-900 font-bold text-sm flex items-start gap-3">
-                          <span className="text-xl">⚠️</span> 
+                          <span className="text-xl">⚠️</span>
                           <span className="leading-relaxed">{analysisResult.mismatch_alert}</span>
                         </p>
                       </div>

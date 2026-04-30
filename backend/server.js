@@ -582,18 +582,31 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
       return res.json({ ats_score: 0, analysis: "ERROR: Failed to read text from the provided PDF document. Please ensure it is a valid text-based PDF.", suggested_roles: [], top_skills: [], experience_summary: "N/A", mismatch_alert: "" });
     }
 
-    const chatCompletion = await groqClient.chat.completions.create({
-      messages: [
-        { role: "system", content: prompt },
-        { role: "user", content: `Here is the extracted text from the candidate's CV:\n\n${cvText}` }
-      ],
-      model: "llama-3.3-70b-versatile",
-      response_format: { type: "json_object" },
-      temperature: 0.2
-    });
+      let output = "{}";
+      try {
+        const chatCompletion = await groqClient.chat.completions.create({
+          messages: [
+            { role: "system", content: prompt },
+            { role: "user", content: `Here is the extracted text from the candidate's CV:\n\n${cvText}` }
+          ],
+          model: "llama-3.3-70b-versatile",
+          response_format: { type: "json_object" },
+          temperature: 0.2
+        });
+        output = chatCompletion.choices[0]?.message?.content || "{}";
+      } catch (groqErr) {
+        console.error("Groq API failed, falling back to Gemini API:", groqErr);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'MISSING');
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const geminiPrompt = prompt + "\n\n" + `Here is the extracted text from the candidate's CV:\n\n${cvText}`;
+        const result = await model.generateContent({
+          contents: [{ role: "user", parts: [{ text: geminiPrompt }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        });
+        output = result.response.text() || "{}";
+      }
 
-    let output = chatCompletion.choices[0]?.message?.content || "{}";
-    const data = JSON.parse(output);
+      const data = JSON.parse(output);
     res.json(data);
   } catch (err) {
     console.error("CV Analysis Error:", err);
@@ -646,7 +659,7 @@ app.post('/api/applications', authenticateToken, async (req, res) => {
     // Send Real Email to Applicant
     const applicantRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [req.user.id]);
     if (applicantRes.rows.length > 0) {
-      await sendEmail({
+      sendEmail({
         to: applicantRes.rows[0].email,
         subject: `Application Submitted: ${jobTitle}`,
         text: `Hello ${applicantRes.rows[0].name},
@@ -669,7 +682,7 @@ Hire-X Global Network`
     // Send Real Email to Employer
     const empRes = await pool.query('SELECT name, email FROM Users WHERE id=$1', [employerId]);
     if (empRes.rows.length > 0) {
-      await sendEmail({
+      sendEmail({
         to: empRes.rows[0].email,
         subject: `New Application Received: ${jobTitle}`,
         text: `Hello ${empRes.rows[0].name},
@@ -900,7 +913,7 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
   const { message, history } = req.body;
   if (!process.env.GROQ_API_KEY) {
     return res.json({
-      text: "ಇದೊಂದು ಡೆಮೊ ರಿಸ್ಪಾನ್ಸ್. ಅಸಲಿ Assistant ಆಗಿ ಕೆಲಸ ಮಾಡಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ '.env' ಫೈಲ್‌ನಲ್ಲಿ 'GROQ_API_KEY' ಸೇರಿಸಿ. (This is a demo response. Please add 'GROQ_API_KEY' to your .env file to enable real Assistant features)."
+      text: "This is a demo response. Please add 'GROQ_API_KEY' to your .env file to enable real Assistant features."
     });
   }
 
@@ -910,7 +923,7 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
       content: msg.text
     }));
 
-    const systemPrompt = "You are Hire-IQ ✨, an advanced conversational Assistant by Hire-X. You must answer ANY user queries, whether science, coding, history, or casual talk, exactly like a generic highly-intelligent Assistant. DO NOT bring up jobs or Hire-X randomly unless explicitly asked by the user.\n\nCRITICAL DIRECTIVES:\n1. Only respond with what is asked. If they say hi, respond normally.\n2. You are practically omniscient. Answer all general knowledge.\n3. MASTER OF LANGUAGES & SCRIPTS: If the user speaks Kannada using English letters (e.g., 'en madta idiya'), YOU MUST reply in proper Kannada script (e.g., 'ನಾನು ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡುತ್ತಿದ್ದೇನೆ'). If the user speaks English using Kannada letters (e.g., 'ಹೌ ಆರ್ ಯು'), YOU MUST reply in proper English script (e.g., 'I am fine, and you?'). Always respond in the native standard script of the underlying language the user intended to speak!\n4. ONLY if the user explicitly asks for jobs, present jobs from the context. If they ask for 'developer jobs', ONLY show matching developer jobs.\n5. When you list a job, include the direct link exactly formatted like this: [Apply for {Job Title} here](/jobs?title={Job Title}).";
+    const systemPrompt = "You are Hire-IQ ✨, an advanced conversational Assistant by Hire-X. You must answer ANY user queries, whether science, coding, history, or casual talk, exactly like a generic highly-intelligent Assistant. DO NOT bring up jobs or Hire-X randomly unless explicitly asked by the user.\n\nCRITICAL DIRECTIVES:\n1. Only respond with what is asked. If they say hi, respond normally.\n2. You are practically omniscient. Answer all general knowledge.\n3. MASTER OF LANGUAGES & SCRIPTS: Always reply in proper English script. If the user speaks in broken English, correct them and respond in English.\n4. ONLY if the user explicitly asks for jobs, present jobs from the context. If they ask for 'developer jobs', ONLY show matching developer jobs.\n5. When you list a job, include the direct link exactly formatted like this: [Apply for {Job Title} here](/jobs?title={Job Title}).";
 
     const chatCompletion = await groqClient.chat.completions.create({
       messages: [

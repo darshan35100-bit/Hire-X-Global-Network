@@ -48,12 +48,12 @@ const AdminJobPosting = () => {
     }
 
     if (endDateDay < today) {
-      setFormError('ದಿನಾಂಕ ಇವತ್ತಿನ ಅಥವಾ ಮುಂದಿನ ದಿನದ್ದಾಗಿರಲಿ.');
+      setFormError('Date must be today or in the future.');
       return;
     }
 
     if (!formData.title || !formData.qualification || !formData.description || !endDateDay || !formData.education_level || !formData.years_experience || !formData.location) {
-      setFormError('ದಯವಿಟ್ಟು ಎಲ್ಲಾ ಕಡ್ಡಾಯ (Mandatory) ಕ್ಷೇತ್ರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ.');
+      setFormError('Please fill all mandatory fields.');
       return;
     }
 
@@ -221,8 +221,8 @@ const AdminJobPosting = () => {
                   <input type="file" accept=".pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
                     const file = e.target.files[0];
                     if (file) {
-                      if (file.size > 20 * 1024 * 1024) {
-                        alert("File size exceeds 20MB limit. Please upload a smaller PDF.");
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert("File size exceeds 2MB limit. Please upload a smaller PDF.");
                         e.target.value = '';
                         return;
                       }

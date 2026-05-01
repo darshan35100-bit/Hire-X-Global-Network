@@ -346,7 +346,7 @@ const Home = () => {
             <Link to="/articles" className="inline-flex items-center gap-2 mt-6 md:mt-0 bg-white/50 border border-gray-200 text-[#113253] font-bold px-8 py-4 rounded-full text-sm tracking-wide transition-all">Explore All Articles</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {articles.length > 0 ? articles.map((article, idx) => {
+            {articles.length > 0 ? articles.slice(0, 3).map((article, idx) => {
               const placeholderImages = [
                 "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072",
                 "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070",

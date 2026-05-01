@@ -569,18 +569,21 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
       return res.json({ ats_score: Math.floor(Math.random() * 40) + 60, analysis: "Demo Analysis: Great match but missing API key.", suggested_roles: [], top_skills: ["Demo Skill 1", "Demo Skill 2"], experience_summary: "Demo Experience 2+ years" });
     }
 
-    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Deeply analyze the provided PDF Document against the provided job description. 
+    const prompt = `You are an expert ATS (Applicant Tracking System) recruiter. Deeply analyze the provided CV text against the provided job description. 
     Job Description: "${job_description || 'General Tech Role'}". 
     Candidate Profile Registration Name: "${profile_name || 'N/A'}".
     
     SCORING CRITERIA:
-    - 85 to 100: Excellent match, high relevancy of skills and qualifications.
-    - 50 to 84: Moderate to good match, some relevant skills.
-    - 25 to 49: Weak match, very few relevant skills.
-    - 0: The document is COMPLETELY empty, or clearly NOT a CV/Resume at all (e.g., marks card, study certificate, random image).
+    - 70 to 100: Excellent match, high relevancy of skills and qualifications.
+    - 40 to 69: Moderate match, some relevant skills or academic background.
+    - 15 to 39: Weak match, but contains some professional or educational keywords.
+    - 1 to 14: Very poor match, but the document is clearly a CV/Resume.
+    - 0: The document is COMPLETELY empty, unreadable, or NOT a CV/Resume at all (e.g., random image, marks card only, or generic certificate).
+
+    Note: If the candidate has even a few matching skills or relevant education, DO NOT give a 0. Give a score that reflects the partial match.
 
     Provide your output STRICTLY in JSON format with the following exact keys. ALL TEXT MUST BE IN ENGLISH:
-    "ats_score": Integer (0 to 100 based on the strict criteria above).
+    "ats_score": Integer (0 to 100).
     "analysis": A MASSIVE, incredibly detailed, strictly factual paragraph (at least 8-15 long sentences). Deeply explain exactly WHY the CV matched or did not match the job. If the document is not a CV, explain exactly what it is and why the score is 0. NEVER write generic text; analyze the exact content of the document.
     "suggested_roles": Array of 3 job titles matching the document facts (leave empty if not a CV).
     "top_skills": Array of factual skills EXACTLY extracted from the document text. DO NOT HALLUCINATE OR INVENT SKILLS.
@@ -595,6 +598,7 @@ app.post('/api/cv-analyze', authenticateToken, async (req, res) => {
     try {
       const pdfData = await pdfParse(pdfBuffer);
       cvText = pdfData.text;
+      console.log("Extracted CV Text (First 500 chars):", cvText.substring(0, 500));
     } catch (parseErr) {
       console.error("PDF Parse Error:", parseErr);
       return res.json({ ats_score: 0, analysis: "ERROR: Failed to read text from the provided PDF document. Please ensure it is a valid text-based PDF.", suggested_roles: [], top_skills: [], experience_summary: "N/A", mismatch_alert: "" });

@@ -25,6 +25,20 @@ const Footer = () => {
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const handleProtectedNavigation = (path, label) => {
+    if (!user) {
+      navigate('/login', { 
+        state: { 
+          blink: true, 
+          blinkId: Date.now(), 
+          redirectMessage: `Please Login or Register to access ${label}.` 
+        } 
+      });
+    } else {
+      navigate(path);
+    }
+  };
+
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -151,10 +165,10 @@ const Footer = () => {
           <div className="flex flex-col items-start">
             <h4 className="text-xl font-bold mb-6 border-b-2 border-[#2af598] pb-2 inline-block">Services available</h4>
             <ul className="space-y-3 text-sm opacity-80 font-light">
-              <li><Link to="/jobs" className="hover:text-[#2af598] transition-colors">Job Placement</Link></li>
-              <li><Link to="/articles" className="hover:text-[#2af598] transition-colors">Resume Review</Link></li>
-              <li><Link to="/articles" className="hover:text-[#2af598] transition-colors">Interview Prep</Link></li>
-              <li><Link to="/login" className="hover:text-[#2af598] transition-colors">Career Coaching</Link></li>
+              <li><button onClick={() => handleProtectedNavigation('/jobs', 'Explore Jobs')} className="hover:text-[#2af598] transition-colors text-left">Job Placement</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/resume-review', 'Resume Review')} className="hover:text-[#2af598] transition-colors text-left">Resume Review</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/interview-prep', 'Interview Prep')} className="hover:text-[#2af598] transition-colors text-left">Interview Prep</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/career-coaching', 'Career Coaching')} className="hover:text-[#2af598] transition-colors text-left">Career Coaching</button></li>
             </ul>
           </div>
 
@@ -162,10 +176,10 @@ const Footer = () => {
           <div className="flex flex-col items-start">
             <h4 className="text-xl font-bold mb-6 border-b-2 border-[#2af598] pb-2 inline-block">About us</h4>
             <ul className="space-y-3 text-sm opacity-80 font-light">
-              <li><Link to="/" className="hover:text-[#2af598] transition-colors">Our Story</Link></li>
-              <li><Link to="/" className="hover:text-[#2af598] transition-colors">Meet the Team</Link></li>
-              <li><Link to="/jobs" className="hover:text-[#2af598] transition-colors">Careers at Hire-X</Link></li>
-              <li><Link to="/articles" className="hover:text-[#2af598] transition-colors">Blog</Link></li>
+              <li><button onClick={() => handleProtectedNavigation('/our-story', 'Our Story')} className="hover:text-[#2af598] transition-colors text-left">Our Story</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/team', 'Meet the Team')} className="hover:text-[#2af598] transition-colors text-left">Meet the Team</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/careers', 'Careers')} className="hover:text-[#2af598] transition-colors text-left">Careers at Hire-X</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/blog', 'Blog')} className="hover:text-[#2af598] transition-colors text-left">Blog</button></li>
             </ul>
           </div>
 
@@ -173,10 +187,10 @@ const Footer = () => {
           <div className="flex flex-col items-start">
             <h4 className="text-xl font-bold mb-6 border-b-2 border-[#2af598] pb-2 inline-block">Helpline Resources</h4>
             <ul className="space-y-3 text-sm opacity-80 font-light">
-              <li><Link to="/articles" className="hover:text-[#2af598] transition-colors">Help Center</Link></li>
-              <li><Link to="/" className="hover:text-[#2af598] transition-colors">FAQ</Link></li>
-              <li><Link to="/" className="hover:text-[#2af598] transition-colors">Terms of Service</Link></li>
-              <li><Link to="/" className="hover:text-[#2af598] transition-colors">Privacy Policy</Link></li>
+              <li><button onClick={() => handleProtectedNavigation('/hire-iq', 'Help Center')} className="hover:text-[#2af598] transition-colors text-left">Help Center</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/faq', 'FAQ')} className="hover:text-[#2af598] transition-colors text-left">FAQ</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/terms', 'Terms of Service')} className="hover:text-[#2af598] transition-colors text-left">Terms of Service</button></li>
+              <li><button onClick={() => handleProtectedNavigation('/privacy', 'Privacy Policy')} className="hover:text-[#2af598] transition-colors text-left">Privacy Policy</button></li>
             </ul>
           </div>
         </div>

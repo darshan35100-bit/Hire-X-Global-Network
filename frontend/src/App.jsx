@@ -12,6 +12,10 @@ import Profile from './components/Profile';
 import { NotificationContext } from './context/NotificationContext';
 import HireIQ from './components/HireIQ';
 import logoImg from './assets/Logo.jpeg';
+import { 
+  OurStory, MeetTheTeam, Careers, Blog, FAQ, Terms, Privacy, 
+  ResumeService, InterviewPrep, CareerCoaching 
+} from './components/FooterPages';
 
 function GlobalNotificationListener() {
   const auth = useContext(AuthContext);
@@ -205,6 +209,16 @@ function App() {
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/articles" element={<Articles />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/our-story" element={<OurStory />} />
+            <Route path="/team" element={<MeetTheTeam />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/resume-review" element={<ResumeService />} />
+            <Route path="/interview-prep" element={<InterviewPrep />} />
+            <Route path="/career-coaching" element={<CareerCoaching />} />
           </Routes>
         </main>
 

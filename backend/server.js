@@ -364,6 +364,11 @@ app.get('/api/jobs', async (req, res) => {
     if (title) { params.push(`%${title}%`); queryText += ` AND Jobs.title ILIKE $${params.length}`; }
     if (location) { params.push(`%${location}%`); queryText += ` AND Jobs.location ILIKE $${params.length}`; }
     queryText += ' ORDER BY Jobs.id DESC';
+    
+    const limit = parseInt(req.query.limit) || 30;
+    const offset = parseInt(req.query.offset) || 0;
+    queryText += ` LIMIT ${limit} OFFSET ${offset}`;
+
     const result = await pool.query(queryText, params);
     res.json(result.rows);
   } catch (err) {
@@ -1041,7 +1046,9 @@ app.get('/api/contact', async (req, res) => {
 app.get('/api/articles', async (req, res) => {
   try {
     // Exclude 'content' from list view to improve performance
-    const result = await pool.query('SELECT id, title, category, description, read_time, image_url, created_at FROM Articles ORDER BY id DESC');
+    const limit = parseInt(req.query.limit) || 30;
+    const offset = parseInt(req.query.offset) || 0;
+    const result = await pool.query('SELECT id, title, category, description, read_time, image_url, created_at FROM Articles ORDER BY id DESC LIMIT $1 OFFSET $2', [limit, offset]);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch articles' });

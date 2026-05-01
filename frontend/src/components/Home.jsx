@@ -126,11 +126,11 @@ const Home = () => {
   };
 
   const fetchArticles = () => {
-    fetch('/api/articles')
+    fetch('/api/articles?limit=3')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setArticles(data.slice(0, 3));
+          setArticles(data);
         }
       })
       .catch(console.error);
@@ -359,7 +359,7 @@ const Home = () => {
                 <motion.div variants={itemVariants} className="group bg-gradient-to-br from-cyan-100/90 via-teal-50/90 to-cyan-200/90 backdrop-blur-2xl rounded-3xl border-2 border-white/60 overflow-hidden shadow-[0_10px_40px_rgba(0,200,255,0.15)] hover:shadow-[0_20px_50px_rgba(0,200,255,0.3)] hover:border-cyan-300 transition-all duration-500 flex flex-col h-full cursor-pointer transform hover:-translate-y-2">
                   <div className="p-3">
                     <div className="rounded-2xl overflow-hidden aspect-[16/10] bg-cyan-900/10 relative shadow-inner">
-                      <img src={article.image_url || placeholderImages[idx % placeholderImages.length]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" />
+                      <img src={article.image_url || placeholderImages[idx % placeholderImages.length]} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" />
                       <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/60 via-transparent to-transparent opacity-80"></div>
                     </div>
                   </div>

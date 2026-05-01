@@ -17,26 +17,26 @@ const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
         className="max-w-5xl mx-auto"
       >
         {/* Navigation Header */}
-        <div className="flex justify-between items-center mb-10 bg-white/20 backdrop-blur-2xl p-5 rounded-[32px] border border-white/40 shadow-2xl">
+        <div className="flex justify-between items-center mb-10 bg-white/40 backdrop-blur-2xl p-5 rounded-[32px] border border-white/40 shadow-2xl">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center gap-3 text-white font-black uppercase tracking-[0.2em] text-[11px] hover:text-[#2af598] transition-all group"
+            className="flex items-center gap-3 text-[#113253] font-black uppercase tracking-[0.2em] text-[11px] hover:text-[#489895] transition-all group"
           >
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#2af598]/20 transition-all">
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#489895]/20 transition-all">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             </div>
             Back
           </button>
           
           <div className="hidden md:flex items-center gap-3">
-             <div className="h-1.5 w-1.5 rounded-full bg-white/40"></div>
-             <div className="h-1.5 w-1.5 rounded-full bg-white/60 animate-pulse"></div>
-             <div className="h-1.5 w-1.5 rounded-full bg-white/40"></div>
+             <div className="h-1.5 w-1.5 rounded-full bg-[#113253]/20"></div>
+             <div className="h-1.5 w-1.5 rounded-full bg-[#113253]/40 animate-pulse"></div>
+             <div className="h-1.5 w-1.5 rounded-full bg-[#113253]/20"></div>
           </div>
           
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-3 text-white font-black uppercase tracking-[0.2em] text-[11px] hover:text-red-400 transition-all group"
+            className="flex items-center gap-3 text-[#113253] font-black uppercase tracking-[0.2em] text-[11px] hover:text-red-600 transition-all group"
           >
             Close
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-red-400/20 transition-all">
@@ -45,7 +45,7 @@ const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
           </button>
         </div>
 
-        <h1 className="text-6xl md:text-8xl font-black text-white mb-16 tracking-tighter text-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)]">
+        <h1 className="text-6xl md:text-8xl font-black text-[#113253] mb-16 tracking-tighter text-center drop-shadow-sm">
           {title}
         </h1>
         
@@ -59,7 +59,7 @@ const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
 };
 
 export const OurStory = () => (
-  <PageWrapper title="Our Story" bgColor="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] bg-[#0f172a]">
+  <PageWrapper title="Our Story" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-8">
       <p className="text-2xl font-bold text-[#113253] leading-snug">
         Founded in <span className="text-[#489895] text-4xl font-black italic">2026</span>, Hire-X Global Network was born from a radical ambition: to synchronize the world's most talented minds with its most significant challenges.
@@ -97,7 +97,7 @@ export const MeetTheTeam = () => {
   }, []);
 
   return (
-    <PageWrapper title="The Team" bgColor="bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca]">
+    <PageWrapper title="The Team" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
       <p className="text-center mb-16 text-xl font-medium text-gray-500 italic">Meet the architects of the Hire-X Ecosystem.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="flex flex-col items-center text-center group">
@@ -128,20 +128,17 @@ export const MeetTheTeam = () => {
 };
 
 export const Careers = () => (
-  <PageWrapper title="Careers" bgColor="bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#047857]">
+  <PageWrapper title="Careers" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-10">
       <p className="text-xl font-medium">
         We're building the future of work, and we need visionaries to help us define it. At Hire-X, you're not just an employee; you're a stakeholder in global progress.
       </p>
       <div className="grid grid-cols-1 gap-6">
         {['System Architect', 'AI Ethics Lead', 'Growth Engineer'].map(role => (
-          <div key={role} className="group bg-gray-50 p-8 rounded-[40px] border-2 border-transparent hover:border-[#489895] hover:bg-white transition-all cursor-pointer flex justify-between items-center shadow-sm">
+          <div key={role} className="group bg-gray-50 p-8 rounded-[40px] border-2 border-transparent transition-all cursor-default flex justify-between items-center shadow-sm">
             <div>
               <h3 className="text-2xl font-black text-[#113253]">{role}</h3>
               <p className="text-sm font-bold text-[#489895] uppercase tracking-widest mt-1">Remote | High Performance</p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-[#113253] group-hover:bg-[#113253] group-hover:text-white transition-all">
-               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
             </div>
           </div>
         ))}
@@ -174,7 +171,7 @@ export const Blog = () => {
   }, []);
 
   return (
-    <PageWrapper title="Insights" bgColor="bg-gradient-to-br from-[#1e3a8a] via-[#1e40af] to-[#1d4ed8]">
+    <PageWrapper title="Insights" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
       {loading ? (
         <div className="flex flex-col items-center py-20 gap-4">
            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -249,7 +246,7 @@ export const Blog = () => {
 };
 
 export const FAQ = () => (
-  <PageWrapper title="FAQ" bgColor="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] bg-[#0f172a]">
+  <PageWrapper title="FAQ" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-12">
       {[
         { q: "How accurate is the ATS score?", a: "Our AI model is trained on thousands of global recruitment data points, offering over 95% accuracy compared to standard enterprise ATS systems." },
@@ -266,7 +263,7 @@ export const FAQ = () => (
 );
 
 export const Terms = () => (
-  <PageWrapper title="Terms" bgColor="bg-gradient-to-br from-[#78350f] via-[#92400e] to-[#b45309]">
+  <PageWrapper title="Terms" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-8 text-sm font-medium">
       <p className="text-lg font-black text-[#113253] border-b border-gray-100 pb-4">Standard Operational Protocol - 2026</p>
       {[
@@ -284,7 +281,7 @@ export const Terms = () => (
 );
 
 export const Privacy = () => (
-  <PageWrapper title="Privacy" bgColor="bg-gradient-to-br from-[#701a75] via-[#86198f] to-[#a21caf]">
+  <PageWrapper title="Privacy" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-8 text-sm font-medium">
        <div className="bg-fuchsia-50 p-8 rounded-[40px] border-2 border-fuchsia-100 shadow-inner mb-10">
           <p className="text-fuchsia-900 font-bold text-lg leading-relaxed">
@@ -306,7 +303,7 @@ export const Privacy = () => (
 );
 
 export const ResumeService = () => (
-  <PageWrapper title="Review" bgColor="bg-gradient-to-br from-[#0c4a6e] via-[#075985] to-[#0369a1]">
+  <PageWrapper title="Review" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="text-center space-y-10">
        <div className="inline-flex p-6 bg-blue-100 rounded-[40px] text-blue-600 shadow-inner">
           <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -332,7 +329,7 @@ export const ResumeService = () => (
 );
 
 export const ResumeReviewDetails = () => (
-  <PageWrapper title="Procedure" bgColor="bg-gradient-to-br from-[#065f46] via-[#064e3b] to-[#047857]">
+  <PageWrapper title="Procedure" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-10">
       <div className="bg-white/40 p-10 rounded-[50px] border border-white shadow-inner">
         <h3 className="text-3xl font-black text-[#113253] mb-8">The Action Protocol</h3>
@@ -371,7 +368,7 @@ export const ResumeReviewDetails = () => (
 );
 
 export const InterviewPrep = () => (
-  <PageWrapper title="Mastery" bgColor="bg-gradient-to-br from-[#4c1d95] via-[#5b21b6] to-[#6d28d9]">
+  <PageWrapper title="Mastery" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-12">
       <div className="flex flex-col items-center text-center">
         <div className="w-24 h-24 bg-purple-100 rounded-[40px] flex items-center justify-center mb-6 text-purple-600 shadow-inner">
@@ -395,7 +392,7 @@ export const InterviewPrep = () => (
 );
 
 export const CareerCoaching = () => (
-  <PageWrapper title="Coaching" bgColor="bg-gradient-to-br from-[#9f1239] via-[#be123c] to-[#e11d48]">
+  <PageWrapper title="Coaching" bgColor="bg-gradient-to-br from-[#e2f0ef] via-[#c4e8e6] to-[#e2f0ef]">
     <div className="space-y-12">
       <div className="bg-[#113253] p-12 rounded-[60px] text-white shadow-3xl relative overflow-hidden">
         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#489895]/20 rounded-full blur-3xl"></div>

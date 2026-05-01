@@ -210,7 +210,7 @@ const Jobs = () => {
                 >
                   <div className="flex items-start gap-3 mb-4">
                     {job.company_logo && typeof job.company_logo === 'string' && job.company_logo.startsWith('data:image') ? (
-                      <img src={job.company_logo} alt="Logo" className="w-10 h-10 rounded shadow-sm object-cover bg-white p-[2px] flex-shrink-0 border border-white/50" />
+                      <img src={job.company_logo} alt="Logo" loading="lazy" className="w-10 h-10 rounded shadow-sm object-cover bg-white p-[2px] flex-shrink-0 border border-white/50" />
                     ) : (
                       <div className="w-10 h-10 rounded bg-white/50 flex items-center justify-center text-teal-800 font-bold text-lg shadow-sm border border-white/50 flex-shrink-0">
                         {job.company_name ? job.company_name.charAt(0) : 'C'}

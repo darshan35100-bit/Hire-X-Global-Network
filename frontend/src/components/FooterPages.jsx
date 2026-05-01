@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 
 const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
@@ -10,39 +10,47 @@ const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
   }, []);
 
   return (
-    <div className={`min-h-screen ${bgColor} py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-500`}>
+    <div className={`min-h-screen ${bgColor} py-12 px-4 sm:px-6 lg:px-8 font-sans transition-all duration-700`}>
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-5xl mx-auto"
       >
         {/* Navigation Header */}
-        <div className="flex justify-between items-center mb-10 bg-white/40 backdrop-blur-md p-4 rounded-3xl border border-white/60 shadow-sm">
+        <div className="flex justify-between items-center mb-10 bg-white/20 backdrop-blur-2xl p-5 rounded-[32px] border border-white/40 shadow-2xl">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-[#113253] font-black uppercase tracking-widest text-[10px] hover:text-[#489895] transition-colors"
+            className="flex items-center gap-3 text-white font-black uppercase tracking-[0.2em] text-[11px] hover:text-[#2af598] transition-all group"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#2af598]/20 transition-all">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </div>
             Back
           </button>
           
-          <div className="h-2 w-2 rounded-full bg-[#113253] animate-pulse"></div>
+          <div className="hidden md:flex items-center gap-3">
+             <div className="h-1.5 w-1.5 rounded-full bg-white/40"></div>
+             <div className="h-1.5 w-1.5 rounded-full bg-white/60 animate-pulse"></div>
+             <div className="h-1.5 w-1.5 rounded-full bg-white/40"></div>
+          </div>
           
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-[#113253] font-black uppercase tracking-widest text-[10px] hover:text-red-500 transition-colors"
+            className="flex items-center gap-3 text-white font-black uppercase tracking-[0.2em] text-[11px] hover:text-red-400 transition-all group"
           >
             Close
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-red-400/20 transition-all">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+            </div>
           </button>
         </div>
 
-        <h1 className="text-5xl md:text-6xl font-black text-[#113253] mb-12 tracking-tight text-center drop-shadow-sm">
+        <h1 className="text-6xl md:text-8xl font-black text-white mb-16 tracking-tighter text-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)]">
           {title}
         </h1>
         
-        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_30px_100px_rgba(0,0,0,0.08)] rounded-[50px] p-8 md:p-14 text-gray-800 leading-relaxed text-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent pointer-events-none"></div>
+        <div className="bg-white/95 backdrop-blur-xl border border-white rounded-[60px] p-10 md:p-16 text-gray-800 leading-relaxed text-lg shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-black/5 to-transparent pointer-events-none rounded-bl-full"></div>
           {children}
         </div>
       </motion.div>
@@ -51,266 +59,364 @@ const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
 };
 
 export const OurStory = () => (
-  <PageWrapper title="Our Story" bgColor="bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
-    <p className="mb-6">
-      Founded in **2026**, **Hire-X Global Network** emerged from a simple yet powerful vision: to bridge the gap between world-class talent and revolutionary opportunities. We believe that a career is more than just a job—it's a journey of identity, growth, and impact.
-    </p>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-10">
-      <div className="bg-[#489895]/10 p-6 rounded-3xl border border-[#489895]/20">
-        <h3 className="text-xl font-black text-[#489895] mb-2 uppercase tracking-widest">Our Mission</h3>
-        <p className="text-sm font-medium">To democratize access to elite career paths through intelligent matching and transparent connections.</p>
+  <PageWrapper title="Our Story" bgColor="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] bg-[#0f172a]">
+    <div className="space-y-8">
+      <p className="text-2xl font-bold text-[#113253] leading-snug">
+        Founded in <span className="text-[#489895] text-4xl font-black italic">2026</span>, Hire-X Global Network was born from a radical ambition: to synchronize the world's most talented minds with its most significant challenges.
+      </p>
+      <p>
+        In an era of rapid technological displacement, we recognized that the traditional bridge between talent and opportunity was crumbling. We didn't just want to fix it; we wanted to rebuild it using the very tools that were redefining our world.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
+        <div className="p-8 rounded-[40px] bg-indigo-50 border-2 border-indigo-100 shadow-inner">
+          <h3 className="text-xl font-black text-indigo-900 mb-3 uppercase tracking-widest">The Catalyst</h3>
+          <p className="text-sm font-medium text-indigo-800/70">Our journey started with a single line of code and a vision to make recruitment as precise as high-frequency trading.</p>
+        </div>
+        <div className="p-8 rounded-[40px] bg-emerald-50 border-2 border-emerald-100 shadow-inner">
+          <h3 className="text-xl font-black text-emerald-900 mb-3 uppercase tracking-widest">The Evolution</h3>
+          <p className="text-sm font-medium text-emerald-800/70">From a startup to a global network, we've evolved into an ecosystem that nurtures careers through every stage of growth.</p>
+        </div>
       </div>
-      <div className="bg-[#806bf8]/10 p-6 rounded-3xl border border-[#806bf8]/20">
-        <h3 className="text-xl font-black text-[#806bf8] mb-2 uppercase tracking-widest">Our Vision</h3>
-        <p className="text-sm font-medium">To build the world's most trusted ecosystem for professional excellence and global recruitment.</p>
-      </div>
+      <p className="font-bold text-[#113253]">
+        Today, Hire-X stands as the premier destination for professionals who refuse to settle. We are more than a platform; we are your strategic advantage in the global talent economy.
+      </p>
     </div>
-    <p className="mb-6 font-bold text-[#113253]">
-      At Hire-X, we don't just list jobs. We engineer success. Our platform uses bleeding-edge technology to analyze your unique skills and pair you with companies that share your values and ambition.
-    </p>
-    <p>
-      Join us as we redefine the future of work. Whether you're an aspirant looking for your ultimate break or an employer scaling for greatness, Hire-X is your strategic partner in the global market.
-    </p>
   </PageWrapper>
 );
 
-export const MeetTheTeam = () => (
-  <PageWrapper title="Meet the Team" bgColor="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50">
-    <p className="text-center mb-12 font-medium">The visionaries behind the Hire-X Ecosystem.</p>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-      <div className="flex flex-col items-center text-center group">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 mb-4 shadow-xl group-hover:scale-110 transition-transform"></div>
-        <h3 className="text-2xl font-black text-[#113253]">Darshan K M</h3>
-        <p className="text-[#489895] font-black uppercase tracking-tighter text-sm">Founder & Chief Architect</p>
-        <p className="text-sm mt-4 text-gray-500 font-medium">Leading the charge in AI-driven recruitment and platform stability.</p>
-        <p className="text-xs mt-2 text-[#113253] font-bold">darshankm35100@gmail.com</p>
+export const MeetTheTeam = () => {
+  const [adminEmail, setAdminEmail] = useState('admin@hire-x.com');
+
+  useEffect(() => {
+    fetch('/api/contact')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.email) setAdminEmail(data.email);
+      })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <PageWrapper title="The Team" bgColor="bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca]">
+      <p className="text-center mb-16 text-xl font-medium text-gray-500 italic">Meet the architects of the Hire-X Ecosystem.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="flex flex-col items-center text-center group">
+          <div className="w-48 h-48 rounded-[60px] bg-gradient-to-tr from-cyan-400 to-blue-600 mb-6 shadow-2xl group-hover:rotate-6 transition-all duration-500 overflow-hidden relative border-4 border-white">
+             <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>
+          </div>
+          <h3 className="text-3xl font-black text-[#113253]">Darshan K M</h3>
+          <p className="text-[#489895] font-black uppercase tracking-widest text-sm mt-1">Founder & Chief Architect</p>
+          <div className="mt-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 w-full">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Direct Contact</p>
+            <p className="text-lg font-black text-[#113253]">{adminEmail}</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center text-center group">
+          <div className="w-48 h-48 rounded-[60px] bg-gradient-to-tr from-purple-400 to-pink-600 mb-6 shadow-2xl group-hover:-rotate-6 transition-all duration-500 overflow-hidden relative border-4 border-white">
+             <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>
+          </div>
+          <h3 className="text-3xl font-black text-[#113253]">Global Support</h3>
+          <p className="text-[#806bf8] font-black uppercase tracking-widest text-sm mt-1">Execution Network</p>
+          <div className="mt-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 w-full">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Support Email</p>
+            <p className="text-lg font-black text-[#113253]">support@hire-x.com</p>
+          </div>
+        </div>
       </div>
-      <div className="flex flex-col items-center text-center group">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-purple-400 to-pink-600 mb-4 shadow-xl group-hover:scale-110 transition-transform"></div>
-        <h3 className="text-2xl font-black text-[#113253]">The Visionaries</h3>
-        <p className="text-[#806bf8] font-black uppercase tracking-tighter text-sm">Global Support Network</p>
-        <p className="text-sm mt-4 text-gray-500 font-medium">A dedicated team of experts ensuring 24/7 success for our users.</p>
-        <p className="text-xs mt-2 text-[#113253] font-bold">support@hire-x.com</p>
-      </div>
-    </div>
-    <div className="mt-16 pt-10 border-t border-gray-100 text-center">
-      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Connect with us on LinkedIn for more updates.</p>
-    </div>
-  </PageWrapper>
-);
+    </PageWrapper>
+  );
+};
 
 export const Careers = () => (
-  <PageWrapper title="Careers at Hire-X" bgColor="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
-    <p className="mb-8">
-      We're looking for disruptors, dreamers, and doers. At Hire-X, you'll work on the front lines of career technology, building tools that change lives globally.
-    </p>
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-        <h3 className="text-xl font-bold text-[#113253]">Full Stack Engineer</h3>
-        <p className="text-sm text-gray-500 font-medium mt-1">Remote | Full-time | $120k - $180k</p>
-      </div>
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-        <h3 className="text-xl font-bold text-[#113253]">AI Specialist</h3>
-        <p className="text-sm text-gray-500 font-medium mt-1">Global | Full-time | $140k - $220k</p>
-      </div>
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-        <h3 className="text-xl font-bold text-[#113253]">Growth Strategist</h3>
-        <p className="text-sm text-gray-500 font-medium mt-1">Hybrid (Bengaluru) | Full-time | $80k - $120k</p>
+  <PageWrapper title="Careers" bgColor="bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#047857]">
+    <div className="space-y-10">
+      <p className="text-xl font-medium">
+        We're building the future of work, and we need visionaries to help us define it. At Hire-X, you're not just an employee; you're a stakeholder in global progress.
+      </p>
+      <div className="grid grid-cols-1 gap-6">
+        {['System Architect', 'AI Ethics Lead', 'Growth Engineer'].map(role => (
+          <div key={role} className="group bg-gray-50 p-8 rounded-[40px] border-2 border-transparent hover:border-[#489895] hover:bg-white transition-all cursor-pointer flex justify-between items-center shadow-sm">
+            <div>
+              <h3 className="text-2xl font-black text-[#113253]">{role}</h3>
+              <p className="text-sm font-bold text-[#489895] uppercase tracking-widest mt-1">Remote | High Performance</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-[#113253] group-hover:bg-[#113253] group-hover:text-white transition-all">
+               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-    <p className="mt-10 text-center font-black text-[#489895] uppercase tracking-widest text-sm">
-      Send your profile to darshankm35100@gmail.com to join the revolution.
-    </p>
   </PageWrapper>
 );
 
-export const Blog = () => (
-  <PageWrapper title="Hire-X Insights" bgColor="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-    <p className="text-center mb-12 font-medium">Read the latest on career growth and market trends.</p>
-    <div className="space-y-12">
-      <article className="border-b border-gray-100 pb-10">
-        <h2 className="text-3xl font-black text-[#113253] mb-4 hover:text-[#489895] cursor-pointer transition-colors">Mastering the Modern Resume in 2026</h2>
-        <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mb-4">May 1, 2026 • 6 min read</p>
-        <p className="mb-4">The landscape of recruitment has shifted. It's no longer just about keywords; it's about narrative and identity. Learn how Hire-X is helping candidates stand out...</p>
-        <button className="text-[#806bf8] font-black uppercase tracking-widest text-xs">Read More →</button>
-      </article>
-      <article className="border-b border-gray-100 pb-10">
-        <h2 className="text-3xl font-black text-[#113253] mb-4 hover:text-[#489895] cursor-pointer transition-colors">Why Personal Branding is Your Best Asset</h2>
-        <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mb-4">April 25, 2026 • 8 min read</p>
-        <p className="mb-4">Your digital footprint is your resume before you even submit it. We explore the strategies for building a premium professional brand that attracts elite employers...</p>
-        <button className="text-[#806bf8] font-black uppercase tracking-widest text-xs">Read More →</button>
-      </article>
-    </div>
-  </PageWrapper>
-);
+export const Blog = () => {
+  const [recentArticles, setRecentArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFullArticle, setSelectedFullArticle] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/articles')
+      .then(res => res.json())
+      .then(async (data) => {
+        if (data && data.length > 0) {
+          const topTwo = data.slice(0, 2);
+          // Fetch full details for these two
+          const detailed = await Promise.all(topTwo.map(async (a) => {
+            const res = await fetch(`/api/articles/${a.id}`);
+            return res.json();
+          }));
+          setRecentArticles(detailed);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  return (
+    <PageWrapper title="Insights" bgColor="bg-gradient-to-br from-[#1e3a8a] via-[#1e40af] to-[#1d4ed8]">
+      {loading ? (
+        <div className="flex flex-col items-center py-20 gap-4">
+           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+           <p className="font-black text-blue-600 uppercase tracking-widest animate-pulse">Syncing Insights...</p>
+        </div>
+      ) : (
+        <div className="space-y-16">
+          {recentArticles.map(article => (
+            <article key={article.id} className="group relative">
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                 <div className="w-full md:w-1/3 aspect-[4/3] rounded-[40px] overflow-hidden shadow-2xl border-4 border-white">
+                    <img src={article.image_url || "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                 </div>
+                 <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-4">
+                       <span className="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase tracking-widest">{article.category}</span>
+                       <span className="text-xs font-bold text-gray-400">{article.read_time}</span>
+                    </div>
+                    <h2 className="text-4xl font-black text-[#113253] mb-6 leading-tight">{article.title}</h2>
+                    <p className="text-gray-600 mb-8 line-clamp-3 font-medium text-lg leading-relaxed">{article.description}</p>
+                    <button 
+                      onClick={() => setSelectedFullArticle(article)}
+                      className="px-8 py-4 bg-[#113253] text-white font-black rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all uppercase tracking-widest text-xs"
+                    >
+                      Read Full Article
+                    </button>
+                 </div>
+              </div>
+            </article>
+          ))}
+          
+          <div className="pt-12 border-t border-gray-100 text-center">
+             <Link to="/articles" className="text-[#1e3a8a] font-black uppercase tracking-[0.3em] text-sm hover:text-blue-700 transition-colors">View All Articles →</Link>
+          </div>
+        </div>
+      )}
+
+      {/* Full Article Modal */}
+      <AnimatePresence>
+        {selectedFullArticle && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#1e3a8a]/40 backdrop-blur-3xl p-4" onClick={() => setSelectedFullArticle(null)}>
+             <motion.div 
+               initial={{ opacity: 0, y: 50, scale: 0.9 }}
+               animate={{ opacity: 1, y: 0, scale: 1 }}
+               exit={{ opacity: 0, y: 50, scale: 0.9 }}
+               className="bg-white rounded-[50px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative"
+               onClick={e => e.stopPropagation()}
+             >
+                <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar flex-grow">
+                   <div className="flex justify-between items-start mb-8">
+                      <div>
+                        <span className="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 inline-block">{selectedFullArticle.category}</span>
+                        <h2 className="text-4xl md:text-5xl font-black text-[#113253] leading-tight">{selectedFullArticle.title}</h2>
+                      </div>
+                      <button onClick={() => setSelectedFullArticle(null)} className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all shadow-inner">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                   </div>
+                   <div className="w-full aspect-video rounded-[40px] overflow-hidden mb-10 shadow-2xl border-4 border-white">
+                      <img src={selectedFullArticle.image_url} className="w-full h-full object-cover" alt="" />
+                   </div>
+                   <div className="text-gray-700 text-xl leading-relaxed whitespace-pre-line font-medium border-t border-gray-100 pt-10">
+                      {selectedFullArticle.content || selectedFullArticle.description}
+                   </div>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </PageWrapper>
+  );
+};
 
 export const FAQ = () => (
-  <PageWrapper title="Frequently Asked Questions" bgColor="bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50">
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-xl font-black text-[#113253] mb-2">How does Hire-X ATS score work?</h3>
-        <p className="text-sm font-medium">Our system uses AI to analyze your PDF resume against specific job requirements, evaluating skills, experience, and relevancy to provide a score from 0 to 100.</p>
-      </div>
-      <div>
-        <h3 className="text-xl font-black text-[#113253] mb-2">Is my data secure?</h3>
-        <p className="text-sm font-medium">Absolutely. We use end-to-end encryption and secure database protocols to ensure your personal information and documents are protected at all times.</p>
-      </div>
-      <div>
-        <h3 className="text-xl font-black text-[#113253] mb-2">Can I apply without a profile?</h3>
-        <p className="text-sm font-medium">No, you must register and complete your profile to access elite opportunities and Hire-IQ features.</p>
-      </div>
-      <div>
-        <h3 className="text-xl font-black text-[#113253] mb-2">How do I contact the Main Admin?</h3>
-        <p className="text-sm font-medium">You can use the 'Immediate Contact' button in the footer to send suggestions or complaints directly to the administration.</p>
-      </div>
+  <PageWrapper title="FAQ" bgColor="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] bg-[#0f172a]">
+    <div className="space-y-12">
+      {[
+        { q: "How accurate is the ATS score?", a: "Our AI model is trained on thousands of global recruitment data points, offering over 95% accuracy compared to standard enterprise ATS systems." },
+        { q: "Can I use Hire-IQ in my local language?", a: "Yes, Hire-IQ supports over 100+ languages including Kannada, Hindi, and more. Simply ask it to switch!" },
+        { q: "What defines an 'Elite' opportunity?", a: "Elite roles are curated based on salary benchmarks, company stability, and growth trajectory, ensuring you only see the top 1% of the market." }
+      ].map(item => (
+        <div key={item.q} className="border-b border-gray-100 pb-8 last:border-0">
+          <h3 className="text-2xl font-black text-[#113253] mb-4">{item.q}</h3>
+          <p className="text-lg font-medium text-gray-500 leading-relaxed">{item.a}</p>
+        </div>
+      ))}
     </div>
   </PageWrapper>
 );
 
 export const Terms = () => (
-  <PageWrapper title="Terms of Service" bgColor="bg-gradient-to-br from-stone-50 via-orange-50/20 to-amber-50/30">
-    <div className="space-y-6 text-sm font-medium">
-      <p>Effective Date: May 1, 2026</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">1. Acceptance of Terms</h3>
-      <p>By accessing Hire-X Global Network, you agree to comply with and be bound by these Terms of Service. If you do not agree, please do not use the platform.</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">2. User Conduct</h3>
-      <p>Users are prohibited from uploading fraudulent documents, misrepresenting their identity, or attempting to breach platform security.</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">3. Limitation of Liability</h3>
-      <p>Hire-X is a matching platform. We do not guarantee employment and are not liable for interactions between users and third-party employers.</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">4. Modifications</h3>
-      <p>We reserve the right to modify these terms at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
+  <PageWrapper title="Terms" bgColor="bg-gradient-to-br from-[#78350f] via-[#92400e] to-[#b45309]">
+    <div className="space-y-8 text-sm font-medium">
+      <p className="text-lg font-black text-[#113253] border-b border-gray-100 pb-4">Standard Operational Protocol - 2026</p>
+      {[
+        { h: "1. Global Access", p: "Users must maintain authentic profiles to ensure network integrity across all supported regions." },
+        { h: "2. Data Sovereignty", p: "Your professional data remains your property. We only process it to enhance your matching precision." },
+        { h: "3. Compliance", p: "All platform interactions must adhere to international professional ethics and fair recruitment standards." }
+      ].map(s => (
+        <div key={s.h}>
+          <h3 className="text-xl font-black text-[#113253] mb-2 uppercase tracking-widest">{s.h}</h3>
+          <p className="text-gray-600 leading-relaxed">{s.p}</p>
+        </div>
+      ))}
     </div>
   </PageWrapper>
 );
 
 export const Privacy = () => (
-  <PageWrapper title="Privacy Policy" bgColor="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50">
-    <div className="space-y-6 text-sm font-medium">
-      <p>Effective Date: May 1, 2026</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">1. Information Collection</h3>
-      <p>We collect personal information such as name, email, and resume data to facilitate job matching and platform features.</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">2. Use of Data</h3>
-      <p>Your data is used to calculate ATS scores, provide Hire-IQ assistance, and connect you with potential employers.</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">3. Data Security</h3>
-      <p>We implement robust technical measures to protect your data. We do not sell your personal information to third parties.</p>
-      <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">4. Your Rights</h3>
-      <p>You have the right to access, modify, or destroy your account and all associated data at any time through your profile settings.</p>
+  <PageWrapper title="Privacy" bgColor="bg-gradient-to-br from-[#701a75] via-[#86198f] to-[#a21caf]">
+    <div className="space-y-8 text-sm font-medium">
+       <div className="bg-fuchsia-50 p-8 rounded-[40px] border-2 border-fuchsia-100 shadow-inner mb-10">
+          <p className="text-fuchsia-900 font-bold text-lg leading-relaxed">
+            "Your privacy is not just a policy; it's our foundational architecture. We encrypt every byte of your professional identity."
+          </p>
+       </div>
+       {[
+        { h: "Zero-Trust Security", p: "We implement multi-layer encryption for all uploaded documents and personal profile data." },
+        { h: "Transparent Processing", p: "You will always know exactly which AI models are processing your data and for what purpose." },
+        { h: "Right to Erasure", p: "One click. Full deletion. We respect your right to be forgotten from our global index at any time." }
+       ].map(s => (
+        <div key={s.h}>
+          <h3 className="text-xl font-black text-[#113253] mb-2 uppercase tracking-widest">{s.h}</h3>
+          <p className="text-gray-600 leading-relaxed">{s.p}</p>
+        </div>
+      ))}
     </div>
   </PageWrapper>
 );
 
 export const ResumeService = () => (
-  <PageWrapper title="Premium Resume Review" bgColor="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50">
-    <div className="text-center mb-10">
-      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
-        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-      </div>
-      <p className="font-bold text-[#113253]">Get your resume analyzed by the industry's most advanced ATS engine.</p>
-    </div>
-    <div className="space-y-6">
-      <div className="bg-white/60 p-8 rounded-[30px] border border-white/80 shadow-sm">
-        <h3 className="text-xl font-black text-[#113253] mb-4 uppercase tracking-widest">How it works</h3>
-        <p className="text-sm leading-relaxed text-gray-700">
-          At **Hire-X**, we provide an automated, AI-driven resume review service that is deeply integrated with our job portal. To get your resume reviewed, you simply need to explore the available opportunities and apply for the roles that match your career goals.
-        </p>
-      </div>
-    </div>
-    <div className="mt-12 flex flex-col items-center gap-6">
-      <div className="bg-emerald-500/10 p-6 rounded-3xl border border-emerald-500/20 max-w-2xl text-center">
-        <p className="text-emerald-900 font-bold text-sm leading-relaxed italic">
-          "The best way to evaluate your resume is against a real-world job description. Our engine provides instant feedback on your profile match score the moment you apply!"
-        </p>
-      </div>
-      
-      <Link 
-        to="/resume-review-details"
-        className="bg-[#113253] text-white font-black py-5 px-12 rounded-2xl shadow-xl hover:scale-105 transition-transform uppercase tracking-[0.2em] text-xs flex items-center gap-3"
-      >
-        Request Detailed Review
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-      </Link>
+  <PageWrapper title="Review" bgColor="bg-gradient-to-br from-[#0c4a6e] via-[#075985] to-[#0369a1]">
+    <div className="text-center space-y-10">
+       <div className="inline-flex p-6 bg-blue-100 rounded-[40px] text-blue-600 shadow-inner">
+          <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+       </div>
+       <p className="text-3xl font-black text-[#113253] leading-tight max-w-2xl mx-auto">
+          Get your profile benchmarked by the world's most sophisticated ATS engine.
+       </p>
+       <div className="p-10 rounded-[50px] bg-gray-50 border-2 border-gray-100 shadow-inner text-left">
+          <h4 className="text-xl font-black text-[#113253] mb-4 uppercase tracking-widest">Our Methodology</h4>
+          <p className="text-gray-600 font-medium leading-relaxed mb-8">
+            We don't just check for spelling. We analyze semantic relevancy, leadership signals, and industry-specific trajectory scores.
+          </p>
+          <Link 
+            to="/resume-review-details"
+            className="inline-flex items-center gap-4 bg-[#113253] text-white font-black py-5 px-10 rounded-[28px] shadow-2xl hover:scale-105 transition-transform uppercase tracking-widest text-xs"
+          >
+            Start Detailed Review
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </Link>
+       </div>
     </div>
   </PageWrapper>
 );
 
 export const ResumeReviewDetails = () => (
-  <PageWrapper title="Review Instructions" bgColor="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+  <PageWrapper title="Procedure" bgColor="bg-gradient-to-br from-[#065f46] via-[#064e3b] to-[#047857]">
     <div className="space-y-10">
-      <div className="bg-white/40 p-8 rounded-[40px] border border-white shadow-sm">
-        <h3 className="text-2xl font-black text-[#113253] mb-6">How to get your Resume reviewed?</h3>
-        <p className="text-lg text-gray-700 leading-relaxed mb-6">
-          To initiate a professional resume review on the **Hire-X Global Network**, you don't need to fill out complex forms. Our system is designed to be **action-oriented**. 
+      <div className="bg-white/40 p-10 rounded-[50px] border border-white shadow-inner">
+        <h3 className="text-3xl font-black text-[#113253] mb-8">The Action Protocol</h3>
+        <p className="text-xl text-gray-700 leading-relaxed mb-10 font-medium">
+          Professional reviews are integrated directly into our application pipeline. We believe evaluation should happen in context.
         </p>
-        <div className="bg-[#113253] text-white p-8 rounded-[30px] mb-8 shadow-2xl">
-          <p className="font-bold text-lg mb-4">The Process is simple:</p>
-          <ol className="list-decimal list-inside space-y-4 font-medium opacity-90">
-            <li>Navigate to the <strong className="text-emerald-400">"Explore Opportunities"</strong> section of the website.</li>
-            <li>Select a job role that aligns with your professional background.</li>
-            <li>Click on the <strong className="text-emerald-400">"Apply Now"</strong> button.</li>
-            <li>Upload your Resume in PDF format.</li>
-            <li>Our intelligent ATS engine will instantly analyze your document against the job requirements.</li>
-          </ol>
+        <div className="bg-[#113253] text-white p-10 rounded-[40px] shadow-3xl mb-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none"></div>
+          <p className="font-black text-2xl mb-8 uppercase tracking-widest text-[#489895]">Execution Steps:</p>
+          <ul className="space-y-6">
+            {[
+              "Enter the 'Explore Opportunities' command center.",
+              "Select a role that matches your elite trajectory.",
+              "Activate the 'Apply Now' protocol.",
+              "Submit your profile and Resume in PDF format.",
+              "The engine triggers an immediate semantic analysis."
+            ].map((step, idx) => (
+              <li key={idx} className="flex gap-6 items-start">
+                <span className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-black text-xl flex-shrink-0 text-[#489895]">{idx + 1}</span>
+                <span className="text-lg font-bold opacity-90 leading-tight">{step}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <p className="text-md text-gray-600 leading-relaxed">
-          This method ensures that your resume is evaluated against **real industry standards**. You will receive an instant **Profile Match Score (0-100)** and a detailed analysis explaining exactly where your resume excels and where it needs improvement. This is the most accurate way to prepare for high-end global recruitment.
+        <p className="text-gray-600 leading-relaxed text-lg font-medium">
+          Once triggered, you will receive an instant Profile Match Score and comprehensive insights into your technical standing.
         </p>
       </div>
-      
-      <div className="flex justify-center">
-        <button 
-          onClick={() => window.location.href = '/jobs'}
-          className="bg-emerald-600 text-white font-black py-6 px-14 rounded-[28px] shadow-2xl hover:bg-emerald-700 transition-all uppercase tracking-[0.3em] text-sm"
-        >
-          Go to Explore Opportunities
-        </button>
+      <div className="text-center">
+        <Link to="/jobs" className="inline-block bg-emerald-600 text-white font-black py-7 px-16 rounded-[32px] shadow-3xl hover:bg-emerald-700 hover:scale-105 transition-all uppercase tracking-[0.4em] text-sm">
+           Enter Command Center
+        </Link>
       </div>
     </div>
   </PageWrapper>
 );
 
 export const InterviewPrep = () => (
-  <PageWrapper title="Interview Mastery" bgColor="bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-50">
-    <div className="text-center mb-10">
-      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 012 2v2H9a2 2 0 01-2-2v-2.586l-1.414-1.414A2 2 0 016 10V6a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+  <PageWrapper title="Mastery" bgColor="bg-gradient-to-br from-[#4c1d95] via-[#5b21b6] to-[#6d28d9]">
+    <div className="space-y-12">
+      <div className="flex flex-col items-center text-center">
+        <div className="w-24 h-24 bg-purple-100 rounded-[40px] flex items-center justify-center mb-6 text-purple-600 shadow-inner">
+           <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 012 2v2H9a2 2 0 01-2-2v-2.586l-1.414-1.414A2 2 0 016 10V6a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+        </div>
+        <p className="text-3xl font-black text-[#113253] leading-tight">Master the Psychology of Global Recruitment.</p>
       </div>
-      <p className="font-bold text-[#113253]">Master the art of the technical and behavioral interview.</p>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="font-black text-[#113253] mb-2 text-sm uppercase">STAR Method</h3>
-        <p className="text-xs text-gray-500">Learn to structure your behavioral answers for maximum impact.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {[
+          { t: "The STAR Framework", d: "Deep dive into narrative structuring for high-impact behavioral answers." },
+          { t: "Technical Logic", d: "Breaking down complex system design and algorithmic challenges." }
+        ].map(item => (
+          <div key={item.t} className="p-8 rounded-[40px] bg-gray-50 border-2 border-gray-100 hover:border-purple-400 transition-all">
+            <h3 className="text-xl font-black text-[#113253] mb-3 uppercase tracking-widest">{item.t}</h3>
+            <p className="text-gray-500 font-medium leading-relaxed">{item.d}</p>
+          </div>
+        ))}
       </div>
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="font-black text-[#113253] mb-2 text-sm uppercase">Technical Screens</h3>
-        <p className="text-xs text-gray-500">Preparation guides for LeetCode, System Design, and Case Studies.</p>
-      </div>
-    </div>
-    <div className="mt-12 text-center">
-      <p className="text-sm font-medium text-gray-400">Join our weekly webinars to practice live mock interviews with seniors.</p>
     </div>
   </PageWrapper>
 );
 
 export const CareerCoaching = () => (
-  <PageWrapper title="Elite Career Coaching" bgColor="bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50/10">
-    <div className="bg-gradient-to-r from-[#113253] to-[#489895] p-10 rounded-[40px] text-white mb-12 shadow-2xl">
-      <h2 className="text-3xl font-black mb-4">Direct Guidance from Industry Leaders.</h2>
-      <p className="text-emerald-50/80 mb-6 font-medium">Navigating your career path shouldn't be a solo journey. Get paired with a mentor who has been where you want to go.</p>
-      <button className="bg-white text-[#113253] font-black py-4 px-10 rounded-2xl shadow-lg hover:brightness-90 transition-all uppercase tracking-widest text-xs">Find a Mentor</button>
-    </div>
-    <div className="space-y-8">
-      <div className="flex items-start gap-6">
-        <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 text-xl font-bold">01</div>
-        <div><h4 className="text-lg font-black text-[#113253] mb-1">Path Optimization</h4><p className="text-sm text-gray-500">Identify the highest leverage moves for your career trajectory.</p></div>
+  <PageWrapper title="Coaching" bgColor="bg-gradient-to-br from-[#9f1239] via-[#be123c] to-[#e11d48]">
+    <div className="space-y-12">
+      <div className="bg-[#113253] p-12 rounded-[60px] text-white shadow-3xl relative overflow-hidden">
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#489895]/20 rounded-full blur-3xl"></div>
+        <h2 className="text-4xl font-black mb-6 leading-tight">Direct Access to Global Mentorship.</h2>
+        <p className="text-emerald-50/70 text-xl font-medium leading-relaxed">
+          Elite career growth is rarely linear. Our coaching network provides the strategic clarity needed to accelerate your professional trajectory.
+        </p>
       </div>
-      <div className="flex items-start gap-6">
-        <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 text-xl font-bold">02</div>
-        <div><h4 className="text-lg font-black text-[#113253] mb-1">Skill Gap Analysis</h4><p className="text-sm text-gray-500">Discover exactly what's holding you back from your next promotion.</p></div>
-      </div>
-      <div className="flex items-start gap-6">
-        <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 text-xl font-bold">03</div>
-        <div><h4 className="text-lg font-black text-[#113253] mb-1">Negotiation Strategy</h4><p className="text-sm text-gray-500">Learn to communicate your value and secure the compensation you deserve.</p></div>
+      <div className="grid grid-cols-1 gap-8">
+        {[
+          { h: "Strategic Trajectory", d: "Defining the long-term moves that lead to executive-level impact." },
+          { h: "Negotiation Mastery", d: "Securing the high-value compensation your expertise commands." }
+        ].map((item, idx) => (
+          <div key={idx} className="flex gap-8 items-start p-8 bg-gray-50 rounded-[40px] border-2 border-transparent hover:border-[#489895] transition-all group">
+             <div className="w-16 h-16 rounded-3xl bg-white shadow-xl flex items-center justify-center font-black text-2xl text-[#113253] group-hover:bg-[#113253] group-hover:text-white transition-all flex-shrink-0">0{idx+1}</div>
+             <div>
+                <h3 className="text-2xl font-black text-[#113253] mb-2">{item.h}</h3>
+                <p className="text-gray-500 font-medium leading-relaxed text-lg">{item.d}</p>
+             </div>
+          </div>
+        ))}
       </div>
     </div>
   </PageWrapper>

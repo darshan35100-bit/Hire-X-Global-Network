@@ -209,7 +209,7 @@ const AdminJobPosting = () => {
                   }} />
                   <div className="flex items-center gap-3">
                     <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-600"><FaCloudUploadAlt /></div>
-                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload Logo</span>
+                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload Logo (Image only)</span>
                   </div>
                   <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.company_logo ? "UPLOADED" : "CHOOSE"}</span>
                 </div>
@@ -235,7 +235,7 @@ const AdminJobPosting = () => {
                   }} />
                   <div className="flex items-center gap-3">
                     <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-600"><FaFileAlt /></div>
-                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload PDF Only</span>
+                    <span className="text-[12px] font-bold text-[#1a3a34]/60 uppercase tracking-tighter">Upload PDF Only (Max 5MB)</span>
                   </div>
                   <span className="text-[10px] font-black text-emerald-500 truncate max-w-[100px]">{formData.official_notification ? "UPLOADED" : "CHOOSE"}</span>
                 </div>

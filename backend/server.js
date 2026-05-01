@@ -359,7 +359,7 @@ function sendNotificationToClients(notification) {
 app.get('/api/jobs', async (req, res) => {
   try {
     const { title, location } = req.query;
-    let queryText = 'SELECT Jobs.id, Jobs.employer_id, Jobs.company_name, Jobs.title, Jobs.qualification, Jobs.description, Jobs.education_level, Jobs.years_experience, Jobs.location, Jobs.company_logo, Jobs.end_date, Jobs.created_at, (length(Jobs.official_notification) > 10) as has_notification, Users.name as employer_name FROM Jobs LEFT JOIN Users ON Jobs.employer_id = Users.id WHERE (Jobs.end_date::timestamp >= NOW() OR Jobs.end_date IS NULL)';
+    let queryText = 'SELECT Jobs.id, Jobs.employer_id, Jobs.company_name, Jobs.title, Jobs.qualification, LEFT(Jobs.description, 300) as description, Jobs.education_level, Jobs.years_experience, Jobs.location, Jobs.company_logo, Jobs.end_date, Jobs.created_at, (length(Jobs.official_notification) > 10) as has_notification, Users.name as employer_name FROM Jobs LEFT JOIN Users ON Jobs.employer_id = Users.id WHERE (Jobs.end_date::timestamp >= NOW() OR Jobs.end_date IS NULL)';
     let params = [];
     if (title) { params.push(`%${title}%`); queryText += ` AND Jobs.title ILIKE $${params.length}`; }
     if (location) { params.push(`%${location}%`); queryText += ` AND Jobs.location ILIKE $${params.length}`; }
@@ -1040,10 +1040,24 @@ app.get('/api/contact', async (req, res) => {
 // --- Articles Endpoints ---
 app.get('/api/articles', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM Articles ORDER BY id DESC');
+    // Exclude 'content' from list view to improve performance
+    const result = await pool.query('SELECT id, title, category, description, read_time, image_url, created_at FROM Articles ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch articles' });
+  }
+});
+
+app.get('/api/articles/:id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Articles WHERE id = $1', [req.params.id]);
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ error: 'Article not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch article details' });
   }
 });
 

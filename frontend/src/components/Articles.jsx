@@ -10,6 +10,7 @@ import {
 const Articles = () => {
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const [loadingArticle, setLoadingArticle] = useState(false);
   const [filter, setFilter] = useState('All');
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -39,7 +40,7 @@ const Articles = () => {
       if (titleToOpen) {
           const matchedArticle = data.find(a => a.title.toLowerCase() === titleToOpen.toLowerCase());
           if (matchedArticle) {
-              setSelectedArticle(matchedArticle);
+              handleSelectArticle(matchedArticle);
           }
       }
     } catch (err) {
@@ -54,6 +55,22 @@ const Articles = () => {
       fetchArticles(); 
     }
   }, [user, navigate]);
+  
+  const handleSelectArticle = async (article) => {
+    setSelectedArticle(article);
+    setLoadingArticle(true);
+    try {
+      const res = await fetch(`/api/articles/${article.id}`);
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedArticle(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch full article", err);
+    } finally {
+      setLoadingArticle(false);
+    }
+  };
 
   // Diverse placeholders to keep the UI fresh
   const placeholderImages = [
@@ -186,7 +203,7 @@ const Articles = () => {
         {/* Articles Grid - Aqua Gradient Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
           {filteredArticles.map((article, index) => (
-            <motion.div layout key={article.id} className="group bg-gradient-to-br from-cyan-100/90 via-teal-50/90 to-cyan-200/90 backdrop-blur-2xl rounded-3xl border-2 border-white/60 overflow-hidden shadow-[0_10px_40px_rgba(0,200,255,0.15)] hover:shadow-[0_20px_50px_rgba(0,200,255,0.3)] hover:border-cyan-300 transition-all duration-500 flex flex-col h-full cursor-pointer transform hover:-translate-y-2" onClick={() => setSelectedArticle(article)}>
+            <motion.div layout key={article.id} className="group bg-gradient-to-br from-cyan-100/90 via-teal-50/90 to-cyan-200/90 backdrop-blur-2xl rounded-3xl border-2 border-white/60 overflow-hidden shadow-[0_10px_40px_rgba(0,200,255,0.15)] hover:shadow-[0_20px_50px_rgba(0,200,255,0.3)] hover:border-cyan-300 transition-all duration-500 flex flex-col h-full cursor-pointer transform hover:-translate-y-2" onClick={() => handleSelectArticle(article)}>
               <div className="p-3">
                 <div className="rounded-2xl overflow-hidden aspect-[16/10] bg-cyan-900/10 relative shadow-inner">
                   <img src={article.image_url || placeholderImages[index % placeholderImages.length]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" />
@@ -234,7 +251,14 @@ const Articles = () => {
                   </div>
                   <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-900 to-purple-900 mb-8 leading-tight drop-shadow-sm">{selectedArticle.title}</h2>
                   <div className="text-cyan-900 text-lg leading-relaxed whitespace-pre-line font-medium border-t border-cyan-100 pt-8">
-                    {selectedArticle.content || selectedArticle.description}
+                    {loadingArticle ? (
+                      <div className="flex flex-col items-center py-10 gap-4">
+                        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="font-bold text-cyan-600 animate-pulse">Gathering deep insights...</p>
+                      </div>
+                    ) : (
+                      selectedArticle.content || selectedArticle.description
+                    )}
                   </div>
                 </div>
               </div>

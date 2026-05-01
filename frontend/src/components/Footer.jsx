@@ -35,7 +35,11 @@ const Footer = () => {
         } 
       });
     } else {
-      navigate(path);
+      if (path === '/hire-iq') {
+        window.dispatchEvent(new CustomEvent('open-hire-iq'));
+      } else {
+        navigate(path);
+      }
     }
   };
 

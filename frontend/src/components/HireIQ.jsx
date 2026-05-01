@@ -18,6 +18,12 @@ const HireIQ = () => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
+    const handleOpenEvent = () => setIsOpen(true);
+    window.addEventListener('open-hire-iq', handleOpenEvent);
+    return () => window.removeEventListener('open-hire-iq', handleOpenEvent);
+  }, []);
+
+  useEffect(() => {
     Promise.all([
       fetch('/api/jobs').then(res => res.json()),
       fetch('/api/articles').then(res => res.json())

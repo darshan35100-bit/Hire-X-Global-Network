@@ -1,22 +1,48 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate, Link } from 'react-router-dom';
 
-const PageWrapper = ({ title, children }) => {
+const PageWrapper = ({ title, children, bgColor = "bg-white" }) => {
+  const navigate = useNavigate();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#eef2ff] to-[#f1f5f9] py-20 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className={`min-h-screen ${bgColor} py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-500`}>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
-        <h1 className="text-5xl md:text-6xl font-black text-[#113253] mb-12 tracking-tight text-center">
+        {/* Navigation Header */}
+        <div className="flex justify-between items-center mb-10 bg-white/40 backdrop-blur-md p-4 rounded-3xl border border-white/60 shadow-sm">
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-[#113253] font-black uppercase tracking-widest text-[10px] hover:text-[#489895] transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back
+          </button>
+          
+          <div className="h-2 w-2 rounded-full bg-[#113253] animate-pulse"></div>
+          
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-[#113253] font-black uppercase tracking-widest text-[10px] hover:text-red-500 transition-colors"
+          >
+            Close
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <h1 className="text-5xl md:text-6xl font-black text-[#113253] mb-12 tracking-tight text-center drop-shadow-sm">
           {title}
         </h1>
-        <div className="bg-white/80 backdrop-blur-xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[40px] p-8 md:p-14 text-gray-700 leading-relaxed text-lg">
+        
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_30px_100px_rgba(0,0,0,0.08)] rounded-[50px] p-8 md:p-14 text-gray-800 leading-relaxed text-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent pointer-events-none"></div>
           {children}
         </div>
       </motion.div>
@@ -25,9 +51,9 @@ const PageWrapper = ({ title, children }) => {
 };
 
 export const OurStory = () => (
-  <PageWrapper title="Our Story">
+  <PageWrapper title="Our Story" bgColor="bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
     <p className="mb-6">
-      Founded in 2024, **Hire-X Global Network** emerged from a simple yet powerful vision: to bridge the gap between world-class talent and revolutionary opportunities. We believe that a career is more than just a job—it's a journey of identity, growth, and impact.
+      Founded in **2026**, **Hire-X Global Network** emerged from a simple yet powerful vision: to bridge the gap between world-class talent and revolutionary opportunities. We believe that a career is more than just a job—it's a journey of identity, growth, and impact.
     </p>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-10">
       <div className="bg-[#489895]/10 p-6 rounded-3xl border border-[#489895]/20">
@@ -49,7 +75,7 @@ export const OurStory = () => (
 );
 
 export const MeetTheTeam = () => (
-  <PageWrapper title="Meet the Team">
+  <PageWrapper title="Meet the Team" bgColor="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50">
     <p className="text-center mb-12 font-medium">The visionaries behind the Hire-X Ecosystem.</p>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
       <div className="flex flex-col items-center text-center group">
@@ -74,7 +100,7 @@ export const MeetTheTeam = () => (
 );
 
 export const Careers = () => (
-  <PageWrapper title="Careers at Hire-X">
+  <PageWrapper title="Careers at Hire-X" bgColor="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
     <p className="mb-8">
       We're looking for disruptors, dreamers, and doers. At Hire-X, you'll work on the front lines of career technology, building tools that change lives globally.
     </p>
@@ -99,7 +125,7 @@ export const Careers = () => (
 );
 
 export const Blog = () => (
-  <PageWrapper title="Hire-X Insights">
+  <PageWrapper title="Hire-X Insights" bgColor="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
     <p className="text-center mb-12 font-medium">Read the latest on career growth and market trends.</p>
     <div className="space-y-12">
       <article className="border-b border-gray-100 pb-10">
@@ -119,7 +145,7 @@ export const Blog = () => (
 );
 
 export const FAQ = () => (
-  <PageWrapper title="Frequently Asked Questions">
+  <PageWrapper title="Frequently Asked Questions" bgColor="bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50">
     <div className="space-y-8">
       <div>
         <h3 className="text-xl font-black text-[#113253] mb-2">How does Hire-X ATS score work?</h3>
@@ -142,9 +168,9 @@ export const FAQ = () => (
 );
 
 export const Terms = () => (
-  <PageWrapper title="Terms of Service">
+  <PageWrapper title="Terms of Service" bgColor="bg-gradient-to-br from-stone-50 via-orange-50/20 to-amber-50/30">
     <div className="space-y-6 text-sm font-medium">
-      <p>Effective Date: May 1, 2024</p>
+      <p>Effective Date: May 1, 2026</p>
       <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">1. Acceptance of Terms</h3>
       <p>By accessing Hire-X Global Network, you agree to comply with and be bound by these Terms of Service. If you do not agree, please do not use the platform.</p>
       <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">2. User Conduct</h3>
@@ -158,9 +184,9 @@ export const Terms = () => (
 );
 
 export const Privacy = () => (
-  <PageWrapper title="Privacy Policy">
+  <PageWrapper title="Privacy Policy" bgColor="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50">
     <div className="space-y-6 text-sm font-medium">
-      <p>Effective Date: May 1, 2024</p>
+      <p>Effective Date: May 1, 2026</p>
       <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">1. Information Collection</h3>
       <p>We collect personal information such as name, email, and resume data to facilitate job matching and platform features.</p>
       <h3 className="text-lg font-black text-[#113253] mt-8 uppercase tracking-widest">2. Use of Data</h3>
@@ -174,7 +200,7 @@ export const Privacy = () => (
 );
 
 export const ResumeService = () => (
-  <PageWrapper title="Premium Resume Review">
+  <PageWrapper title="Premium Resume Review" bgColor="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50">
     <div className="text-center mb-10">
       <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
         <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -182,23 +208,68 @@ export const ResumeService = () => (
       <p className="font-bold text-[#113253]">Get your resume analyzed by the industry's most advanced ATS engine.</p>
     </div>
     <div className="space-y-6">
-      <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200">
-        <h3 className="text-lg font-black text-[#113253] mb-2 uppercase tracking-widest">AI Analysis</h3>
-        <p className="text-sm">Upload your resume to our 'Explore Jobs' section to get an instant ATS score and detailed feedback on matching your profile with top roles.</p>
-      </div>
-      <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200">
-        <h3 className="text-lg font-black text-[#113253] mb-2 uppercase tracking-widest">Expert Feedback</h3>
-        <p className="text-sm">Our premium members get direct access to personalized resume editing tips from our team of global recruiters.</p>
+      <div className="bg-white/60 p-8 rounded-[30px] border border-white/80 shadow-sm">
+        <h3 className="text-xl font-black text-[#113253] mb-4 uppercase tracking-widest">How it works</h3>
+        <p className="text-sm leading-relaxed text-gray-700">
+          At **Hire-X**, we provide an automated, AI-driven resume review service that is deeply integrated with our job portal. To get your resume reviewed, you simply need to explore the available opportunities and apply for the roles that match your career goals.
+        </p>
       </div>
     </div>
-    <div className="mt-12 flex justify-center">
-      <button className="bg-[#113253] text-white font-black py-4 px-10 rounded-2xl shadow-xl hover:scale-105 transition-transform uppercase tracking-widest text-xs">Request Review</button>
+    <div className="mt-12 flex flex-col items-center gap-6">
+      <div className="bg-emerald-500/10 p-6 rounded-3xl border border-emerald-500/20 max-w-2xl text-center">
+        <p className="text-emerald-900 font-bold text-sm leading-relaxed italic">
+          "The best way to evaluate your resume is against a real-world job description. Our engine provides instant feedback on your profile match score the moment you apply!"
+        </p>
+      </div>
+      
+      <Link 
+        to="/resume-review-details"
+        className="bg-[#113253] text-white font-black py-5 px-12 rounded-2xl shadow-xl hover:scale-105 transition-transform uppercase tracking-[0.2em] text-xs flex items-center gap-3"
+      >
+        Request Detailed Review
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+      </Link>
+    </div>
+  </PageWrapper>
+);
+
+export const ResumeReviewDetails = () => (
+  <PageWrapper title="Review Instructions" bgColor="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+    <div className="space-y-10">
+      <div className="bg-white/40 p-8 rounded-[40px] border border-white shadow-sm">
+        <h3 className="text-2xl font-black text-[#113253] mb-6">How to get your Resume reviewed?</h3>
+        <p className="text-lg text-gray-700 leading-relaxed mb-6">
+          To initiate a professional resume review on the **Hire-X Global Network**, you don't need to fill out complex forms. Our system is designed to be **action-oriented**. 
+        </p>
+        <div className="bg-[#113253] text-white p-8 rounded-[30px] mb-8 shadow-2xl">
+          <p className="font-bold text-lg mb-4">The Process is simple:</p>
+          <ol className="list-decimal list-inside space-y-4 font-medium opacity-90">
+            <li>Navigate to the <strong className="text-emerald-400">"Explore Opportunities"</strong> section of the website.</li>
+            <li>Select a job role that aligns with your professional background.</li>
+            <li>Click on the <strong className="text-emerald-400">"Apply Now"</strong> button.</li>
+            <li>Upload your Resume in PDF format.</li>
+            <li>Our intelligent ATS engine will instantly analyze your document against the job requirements.</li>
+          </ol>
+        </div>
+        <p className="text-md text-gray-600 leading-relaxed">
+          This method ensures that your resume is evaluated against **real industry standards**. You will receive an instant **Profile Match Score (0-100)** and a detailed analysis explaining exactly where your resume excels and where it needs improvement. This is the most accurate way to prepare for high-end global recruitment.
+        </p>
+      </div>
+      
+      <div className="flex justify-center">
+        <button 
+          onClick={() => window.location.href = '/jobs'}
+          className="bg-emerald-600 text-white font-black py-6 px-14 rounded-[28px] shadow-2xl hover:bg-emerald-700 transition-all uppercase tracking-[0.3em] text-sm"
+        >
+          Go to Explore Opportunities
+        </button>
+      </div>
     </div>
   </PageWrapper>
 );
 
 export const InterviewPrep = () => (
-  <PageWrapper title="Interview Mastery">
+  <PageWrapper title="Interview Mastery" bgColor="bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-50">
     <div className="text-center mb-10">
       <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
         <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 012 2v2H9a2 2 0 01-2-2v-2.586l-1.414-1.414A2 2 0 016 10V6a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -222,7 +293,7 @@ export const InterviewPrep = () => (
 );
 
 export const CareerCoaching = () => (
-  <PageWrapper title="Elite Career Coaching">
+  <PageWrapper title="Elite Career Coaching" bgColor="bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50/10">
     <div className="bg-gradient-to-r from-[#113253] to-[#489895] p-10 rounded-[40px] text-white mb-12 shadow-2xl">
       <h2 className="text-3xl font-black mb-4">Direct Guidance from Industry Leaders.</h2>
       <p className="text-emerald-50/80 mb-6 font-medium">Navigating your career path shouldn't be a solo journey. Get paired with a mentor who has been where you want to go.</p>

@@ -14,7 +14,7 @@ import HireIQ from './components/HireIQ';
 import logoImg from './assets/Logo.jpeg';
 import { 
   OurStory, MeetTheTeam, Careers, Blog, FAQ, Terms, Privacy, 
-  ResumeService, InterviewPrep, CareerCoaching 
+  ResumeService, InterviewPrep, CareerCoaching, ResumeReviewDetails 
 } from './components/FooterPages';
 
 function GlobalNotificationListener() {
@@ -219,6 +219,7 @@ function App() {
             <Route path="/resume-review" element={<ResumeService />} />
             <Route path="/interview-prep" element={<InterviewPrep />} />
             <Route path="/career-coaching" element={<CareerCoaching />} />
+            <Route path="/resume-review-details" element={<ResumeReviewDetails />} />
           </Routes>
         </main>
 

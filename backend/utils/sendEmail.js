@@ -31,12 +31,30 @@ const sendEmail = async ({ to, subject, text, fromName }) => {
       return true;
     }
 
-    // 3. Check for Brevo (Sendinblue) API Key (HTTP API - works on Render)
+    // 3. Check for Brevo (Sendinblue) API Key (starts with xkeysib- or SMTP key starting with xsmtpsib-)
     if (process.env.BREVO_API_KEY) {
-      console.log(`[Email] Attempting to send email via Brevo API to: ${to}`);
-      const fromEmail = process.env.EMAIL_USER || 'no-reply@hire-x.com';
-      const success = await sendViaBrevo({ to, subject, text, fromName, fromEmail, apiKey: process.env.BREVO_API_KEY });
-      if (success) return true;
+      const apiKey = process.env.BREVO_API_KEY.trim();
+      
+      if (apiKey.startsWith('xkeysib-')) {
+        console.log(`[Email] Brevo API Key detected. Attempting to send email via Brevo HTTP API to: ${to}`);
+        const fromEmail = process.env.EMAIL_USER || 'no-reply@hire-x.com';
+        const success = await sendViaBrevo({ to, subject, text, fromName, fromEmail, apiKey });
+        if (success) return true;
+      } else if (apiKey.startsWith('xsmtpsib-')) {
+        console.log(`[Email] Brevo SMTP Key detected. Attempting to send email via Brevo SMTP Relay (Port 2525) to: ${to}`);
+        const success = await sendViaBrevoSmtp({ to, subject, text, fromName, smtpKey: apiKey });
+        if (success) return true;
+      } else {
+        // Unknown prefix, try HTTP first then SMTP port 2525
+        console.log(`[Email] Unknown prefix for BREVO_API_KEY. Trying Brevo HTTP API first for: ${to}`);
+        const fromEmail = process.env.EMAIL_USER || 'no-reply@hire-x.com';
+        let success = await sendViaBrevo({ to, subject, text, fromName, fromEmail, apiKey });
+        if (success) return true;
+
+        console.log(`[Email] Brevo HTTP API failed. Trying Brevo SMTP Relay on Port 2525...`);
+        success = await sendViaBrevoSmtp({ to, subject, text, fromName, smtpKey: apiKey });
+        if (success) return true;
+      }
     }
 
     // 4. Check for SendGrid API Key (HTTP API - works on Render)
@@ -208,6 +226,37 @@ const sendViaBrevo = async ({ to, subject, text, fromName, fromEmail, apiKey }) 
     req.write(data);
     req.end();
   });
+};
+
+// Helper function for Brevo SMTP Relay on Port 2525
+const sendViaBrevoSmtp = async ({ to, subject, text, fromName, smtpKey }) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 2525, // Port 2525 is NOT blocked by Render
+      auth: {
+        user: process.env.EMAIL_USER || 'hirexglobalnetworkbykm@gmail.com',
+        pass: smtpKey
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000
+    });
+
+    const mailOptions = {
+      from: `"${fromName || 'Hire-X Global Network'}" <${process.env.EMAIL_USER || 'hirexglobalnetworkbykm@gmail.com'}>`,
+      to,
+      subject,
+      text
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("[Email] Sent successfully via Brevo SMTP Relay (Port 2525)");
+    return true;
+  } catch (error) {
+    console.error("[Email] Brevo SMTP Relay failed:", error.message || error);
+    return false;
+  }
 };
 
 // Helper function for SendGrid API

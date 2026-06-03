@@ -168,7 +168,7 @@ app.post('/api/auth/send-verify-otp', async (req, res) => {
 
     if (!emailSent) {
       delete otps['verify_' + identifier];
-      return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
+      return res.status(400).json({ error: 'Failed to send OTP email. Render blocks standard SMTP (Gmail). Please configure a working Email HTTP API (like RESEND_API_KEY, BREVO_API_KEY, or SENDGRID_API_KEY) in your Render environment variables.' });
     }
 
     res.json({ message: "Email OTP sent successfully." });
@@ -284,7 +284,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
       if (!emailSent) {
         delete otps[identifier];
-        return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
+        return res.status(400).json({ error: 'Failed to send OTP email. Render blocks standard SMTP (Gmail). Please configure a working Email HTTP API (like RESEND_API_KEY, BREVO_API_KEY, or SENDGRID_API_KEY) in your Render environment variables.' });
       }
 
       res.json({ message: "OTP sent to your Registered Email." });
@@ -445,7 +445,7 @@ app.post('/api/users/destroy-request-otp', authenticateToken, async (req, res) =
 
     if (!emailSent) {
       delete otps['destroy_' + identifier];
-      return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
+      return res.status(400).json({ error: 'Failed to send OTP email. Render blocks standard SMTP (Gmail). Please configure a working Email HTTP API (like RESEND_API_KEY, BREVO_API_KEY, or SENDGRID_API_KEY) in your Render environment variables.' });
     }
 
     res.json({ message: "Destruction verification OTP sent successfully." });
@@ -492,7 +492,7 @@ app.post('/api/auth/destroy-request-otp', async (req, res) => {
 
     if (!emailSent) {
       delete otps['destroy_unauth_' + identifier];
-      return res.status(400).json({ error: 'Failed to send OTP email. If using Resend, please check if your domain is verified, or switch to Gmail/Nodemailer as explained.' });
+      return res.status(400).json({ error: 'Failed to send OTP email. Render blocks standard SMTP (Gmail). Please configure a working Email HTTP API (like RESEND_API_KEY, BREVO_API_KEY, or SENDGRID_API_KEY) in your Render environment variables.' });
     }
 
     res.json({ message: "Destruction verification OTP sent successfully." });
@@ -1191,7 +1191,7 @@ app.post('/api/auth/admin-change-req-otp', authenticateToken, async (req, res) =
       text: `Hello Main Admin,\n\nYour OTP to initiate credential change is: ${otp}\n\nDo not share this with anyone.`,
       fromName: 'Hire-X Global Network'
     });
-    if (!emailSent) return res.status(400).json({ error: 'Failed to send email.' });
+    if (!emailSent) return res.status(400).json({ error: 'Failed to send email. Render blocks standard SMTP (Gmail). Please configure a working Email HTTP API (like RESEND_API_KEY, BREVO_API_KEY, or SENDGRID_API_KEY) in your Render environment variables.' });
     res.json({ message: "OTP sent to current email." });
   } catch (err) {
     res.status(500).json({ error: 'System error' });
@@ -1227,7 +1227,7 @@ app.post('/api/auth/admin-new-email-otp', authenticateToken, async (req, res) =>
       text: `Hello Main Admin,\n\nYour OTP to verify your new email is: ${otp}\n\nDo not share this with anyone.`,
       fromName: 'Hire-X Global Network'
     });
-    if (!emailSent) return res.status(400).json({ error: 'Failed to send email.' });
+    if (!emailSent) return res.status(400).json({ error: 'Failed to send email. Render blocks standard SMTP (Gmail). Please configure a working Email HTTP API (like RESEND_API_KEY, BREVO_API_KEY, or SENDGRID_API_KEY) in your Render environment variables.' });
     res.json({ message: "OTP sent to new email." });
   } catch (err) {
     res.status(500).json({ error: 'System error' });

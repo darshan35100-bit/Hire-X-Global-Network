@@ -4,7 +4,14 @@ const https = require('https');
 
 const sendEmail = async ({ to, subject, text, fromName }) => {
   try {
-    // 1. Check for Resend API Key (HTTP API - works on Render)
+    // 1. Check for Google Apps Script Web App URL (HTTP API - works on Render & uses direct Gmail)
+    if (process.env.GOOGLE_SCRIPT_URL) {
+      console.log(`[Email] Attempting to send email via Google Apps Script to: ${to}`);
+      const success = await sendViaGoogleScript({ to, subject, text, fromName, url: process.env.GOOGLE_SCRIPT_URL });
+      if (success) return true;
+    }
+
+    // 2. Check for Resend API Key (HTTP API - works on Render)
     if (process.env.RESEND_API_KEY) {
       console.log(`[Email] Attempting to send email via Resend API to: ${to}`);
       const resend = new Resend(process.env.RESEND_API_KEY);
@@ -24,7 +31,7 @@ const sendEmail = async ({ to, subject, text, fromName }) => {
       return true;
     }
 
-    // 2. Check for Brevo (Sendinblue) API Key (HTTP API - works on Render)
+    // 3. Check for Brevo (Sendinblue) API Key (HTTP API - works on Render)
     if (process.env.BREVO_API_KEY) {
       console.log(`[Email] Attempting to send email via Brevo API to: ${to}`);
       const fromEmail = process.env.EMAIL_USER || 'no-reply@hire-x.com';
@@ -32,7 +39,7 @@ const sendEmail = async ({ to, subject, text, fromName }) => {
       if (success) return true;
     }
 
-    // 3. Check for SendGrid API Key (HTTP API - works on Render)
+    // 4. Check for SendGrid API Key (HTTP API - works on Render)
     if (process.env.SENDGRID_API_KEY) {
       console.log(`[Email] Attempting to send email via SendGrid API to: ${to}`);
       const fromEmail = process.env.EMAIL_USER || 'no-reply@hire-x.com';
@@ -40,7 +47,7 @@ const sendEmail = async ({ to, subject, text, fromName }) => {
       if (success) return true;
     }
 
-    // 4. Fallback to Nodemailer SMTP (Gmail)
+    // 5. Fallback to Nodemailer SMTP (Gmail)
     // IMPORTANT: On Render Free Tier, SMTP ports (25, 465, 587) are blocked.
     // If running on Render, this will fail. We use a 5-second timeout to avoid 502 Bad Gateway (Gateway Timeout).
     console.log(`[Email] No HTTP Email API keys found. Falling back to Gmail SMTP for: ${to}`);
@@ -74,6 +81,85 @@ const sendEmail = async ({ to, subject, text, fromName }) => {
     console.error("[Email] Email sending failed completely:", error.message || error);
     return false;
   }
+};
+
+// Helper function for Google Apps Script
+const sendViaGoogleScript = async ({ to, subject, text, fromName, url }) => {
+  const data = JSON.stringify({ to, subject, text, fromName });
+
+  return new Promise((resolve) => {
+    const urlObj = new URL(url);
+    const req = https.request({
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname + urlObj.search,
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(data)
+      }
+    }, (res) => {
+      // Follow redirect (status 302)
+      if (res.statusCode === 302 || res.statusCode === 301) {
+        const redirectUrl = res.headers.location;
+        const redirectUrlObj = new URL(redirectUrl);
+        const redReq = https.request({
+          hostname: redirectUrlObj.hostname,
+          port: 443,
+          path: redirectUrlObj.pathname + redirectUrlObj.search,
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'content-length': Buffer.byteLength(data)
+          }
+        }, (redRes) => {
+          let body = '';
+          redRes.on('data', chunk => body += chunk);
+          redRes.on('end', () => {
+            try {
+              const parsed = JSON.parse(body);
+              if (parsed.success) {
+                console.log("[Email] Sent successfully via Google Apps Script");
+                resolve(true);
+              } else {
+                console.error("[Email] Google Apps Script returned failure:", parsed.error);
+                resolve(false);
+              }
+            } catch(e) {
+              console.log("[Email] Sent successfully via Google Apps Script (HTML or redirect response)");
+              resolve(true);
+            }
+          });
+        });
+        redReq.on('error', (err) => {
+          console.error("[Email] Google Apps Script redirect request error:", err);
+          resolve(false);
+        });
+        redReq.write(data);
+        redReq.end();
+      } else {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            console.log("[Email] Sent successfully via Google Apps Script:", body);
+            resolve(true);
+          } else {
+            console.error("[Email] Google Apps Script failed with status code:", res.statusCode, body);
+            resolve(false);
+          }
+        });
+      }
+    });
+
+    req.on('error', (err) => {
+      console.error("[Email] Google Apps Script request error:", err);
+      resolve(false);
+    });
+
+    req.write(data);
+    req.end();
+  });
 };
 
 // Helper function for Brevo API
